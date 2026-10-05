@@ -15,6 +15,7 @@
   --stage: #dfe3e1;
   --floor: #c9ccc7;
   --grid: #b4b9b5;
+  --ok: #2e6b47; --ok-bg: #dcefe3; --warn: #8a5a00; --warn-bg: #f7ead0; --ng: #a3302a; --ng-bg: #f6dcda;
   --f-ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   --f-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   color-scheme: light;
@@ -22,13 +23,15 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14181b; --panel: #1b2024; --fg: #e3e7e8; --muted: #95a0a6; --line: #2d3439;
+    --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
     --accent: #7fb0dc; --accent-soft: #233545; --stage: #1f2529; --floor: #3a3f42; --grid: #4a5054;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #14181b; --panel: #1b2024; --fg: #e3e7e8; --muted: #95a0a6; --line: #2d3439;
-  --accent: #7fb0dc; --accent-soft: #233545; --stage: #1f2529; --floor: #3a3f42; --grid: #4a5054;
+  --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
+    --accent: #7fb0dc; --accent-soft: #233545; --stage: #1f2529; --floor: #3a3f42; --grid: #4a5054;
   color-scheme: dark;
 }
 html, body { height: 100%; }
@@ -53,11 +56,35 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-ui); font-s
   position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
   font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--muted); white-space: nowrap;
 }
+.tag {
+  position: absolute; left: 0; top: 0; font-size: 11px; font-weight: 500; white-space: nowrap;
+  color: var(--fg); background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line); padding: 0 6px; border-radius: 3px;
+}
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.5; }
+.checks li { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: start; }
+.chip { font-size: 10.5px; font-weight: 700; text-align: center; border-radius: 3px; padding: 1px 0; letter-spacing: .04em; }
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.ng { background: var(--ng-bg); color: var(--ng); }
+.sum { float: right; font-family: var(--f-num); letter-spacing: 0; color: var(--fg); }
 .hint {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted);
   background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 2px 8px; border-radius: 4px;
 }
-.stage.night .zone, .stage.night .hint { color: #c9d2d8; background: transparent; }
+.stage.night .zone, .stage.night .tag {
+  position: absolute; left: 0; top: 0; font-size: 11px; font-weight: 500; white-space: nowrap;
+  color: var(--fg); background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line); padding: 0 6px; border-radius: 3px;
+}
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.5; }
+.checks li { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: start; }
+.chip { font-size: 10.5px; font-weight: 700; text-align: center; border-radius: 3px; padding: 1px 0; letter-spacing: .04em; }
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.ng { background: var(--ng-bg); color: var(--ng); }
+.sum { float: right; font-family: var(--f-num); letter-spacing: 0; color: var(--fg); }
+.hint { color: #c9d2d8; background: transparent; }
 
 .panel {
   min-width: 0; overflow-y: auto; background: var(--panel); border: 1px solid var(--line);
@@ -132,6 +159,11 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     </header>
 
     <section>
+      <h2>配置チェック <span class="sum" id="checkSum"></span></h2>
+      <ul class="checks" id="checks"></ul>
+    </section>
+
+    <section>
       <h2>視点</h2>
       <div class="views" id="views">
         <button type="button" data-view="iso" aria-pressed="true">斜め</button>
@@ -146,8 +178,10 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     <section>
       <h2>表示</h2>
       <div class="toggles">
-        <label class="tg" for="t-dims"><span>寸法線</span><input type="checkbox" id="t-dims" checked></label>
-        <label class="tg" for="t-people"><span>人物<small>立位 1650mm ・ 座位スタッフ</small></span><input type="checkbox" id="t-people" checked></label>
+        <label class="tg" for="t-equip"><span>機器<small>モニター・レジ・PC・決済端末など</small></span><input type="checkbox" id="t-equip" checked></label>
+        <label class="tg" for="t-tags"><span>機器名ラベル</span><input type="checkbox" id="t-tags" checked></label>
+        <label class="tg" for="t-dims"><span>寸法線</span><input type="checkbox" id="t-dims"></label>
+        <label class="tg" for="t-people"><span>人物<small>半透明 ・ 患者 1650mm ・ スタッフ2名</small></span><input type="checkbox" id="t-people" checked></label>
         <label class="tg" for="t-light"><span>間接照明<small>足元の台輪を照らすライン照明</small></span><input type="checkbox" id="t-light" checked></label>
         <label class="tg" for="t-night"><span>夜間モード<small>周囲を暗くして照明を確認</small></span><input type="checkbox" id="t-night"></label>
         <label class="tg" for="t-section"><span>断面カット<small>図面と同じ側面断面を表示</small></span><input type="checkbox" id="t-section"></label>
@@ -155,6 +189,15 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
           <span class="unit">位置</span>
           <input type="range" id="cut" min="-700" max="700" step="5" value="0" aria-label="断面の位置">
         </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>モバイルモニター</h2>
+      <div class="views" id="monSize">
+        <button type="button" data-mon="15.6" aria-pressed="true">15.6型</button>
+        <button type="button" data-mon="14">14型</button>
+        <button type="button" data-mon="13.3">13.3型</button>
       </div>
     </section>
 
@@ -199,7 +242,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
       </dl>
     </section>
 
-    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。</p>
+    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは一般的な外形、ドロアは TE-400 全体寸法から本体分を引いた推定）。</p>
   </aside>
 </div>
 
@@ -222,7 +265,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   };
   const DESKS = { white: { name: 'ホワイト', c: '#eceae4' }, grey: { name: 'ライトグレー', c: '#c4c6c6' }, wood: { name: '木目', c: null } };
   const CLOTHS = { ivory: { name: 'アイボリー', c: '#ebe6db' }, grey: { name: 'グレー', c: '#cfcfcb' }, mint: { name: 'ミント', c: '#cfdcd6' } };
-  const S = { W: 1415, wood: 'oak', desk: 'white', cloth: 'ivory', dims: true, people: true, light: true, night: false, section: false, cut: 0 };
+  const S = { W: 1415, wood: 'oak', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '15.6', light: true, night: false, section: false, cut: 0 };
 
   // ---- renderer / scene ----
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -334,9 +377,9 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     cap: std({ color: 0x2b2d2f, roughness: 0.6 }),
     led: std({ color: 0xfff1d6, emissive: 0xffd49a, emissiveIntensity: 1.6 }),
   };
-  const personMat = new THREE.MeshStandardMaterial({ color: 0x9aa6af, roughness: 0.85 });
-  const chairMat = new THREE.MeshStandardMaterial({ color: 0x3e4a55, roughness: 0.8 });
-  const chairMetal = new THREE.MeshStandardMaterial({ color: 0x8d9398, metalness: 0.7, roughness: 0.35 });
+  const personMat = new THREE.MeshStandardMaterial({ color: 0x8fa3b3, roughness: 0.85, transparent: true, opacity: 0.32, depthWrite: false });
+  const chairMat = new THREE.MeshStandardMaterial({ color: 0x3e4a55, roughness: 0.8, transparent: true, opacity: 0.45, depthWrite: false });
+  const chairMetal = new THREE.MeshStandardMaterial({ color: 0x8d9398, metalness: 0.7, roughness: 0.35, transparent: true, opacity: 0.45, depthWrite: false });
 
   function applyFinishes() {
     const w = WOODS[S.wood];
@@ -447,22 +490,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     m.position.set(...p); m.scale.z = sz; m.castShadow = true; parent.add(m); return m;
   }
 
-  function buildPeople() {
-    disposeGroup(people);
-    people = new THREE.Group();
-    // 立位の患者（身長 1650）患者側に立ちカウンターへ向く
-    const st = new THREE.Group();
-    for (const s of [-1, 1]) {
-      limb(62, 52, 820, [s * 90, 840, 0], [s * 90, 30, 0], personMat, st);
-      ball(55, [s * 90, 30, 30], personMat, st, 1.8);
-      limb(42, 34, 560, [s * 215, 1360, 0], [s * 240, 820, -40], personMat, st);
-    }
-    limb(160, 170, 560, [0, 830, 0], [0, 1390, 0], personMat, st).scale.z = 0.62;
-    limb(48, 48, 90, [0, 1380, 0], [0, 1460, 0], personMat, st);
-    ball(105, [0, 1545, 0], personMat, st, 1.05);
-    st.position.set(-S.W * 0.3, 0, Z(-380));
-    people.add(st);
-
+  function seatedStaff(x) {
     // 座位のスタッフ（座面高 430）机に向く
     const sit = new THREE.Group();
     const hipD = 1060, kneeD = 640;
@@ -470,35 +498,292 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
       limb(64, 58, hipD - kneeD, [s * 95, 470, Z(hipD)], [s * 95, 480, Z(kneeD)], personMat, sit);
       limb(52, 44, 440, [s * 95, 470, Z(kneeD)], [s * 95, 40, Z(kneeD - 20)], personMat, sit);
       ball(52, [s * 95, 30, Z(kneeD - 60)], personMat, sit, 1.8);
-      limb(40, 34, 300, [s * 210, 1010, Z(hipD - 30)], [s * 210, 760, Z(hipD - 160)], personMat, sit);
-      limb(34, 30, 280, [s * 210, 760, Z(hipD - 160)], [s * 170, 700, Z(hipD - 420)], personMat, sit);
+      limb(40, 34, 300, [s * 210, 1010, Z(hipD - 30)], [s * 200, 780, Z(hipD - 170)], personMat, sit);
+      limb(34, 30, 300, [s * 200, 780, Z(hipD - 170)], [s * 150, 712, Z(hipD - 430)], personMat, sit);
     }
     limb(150, 165, 520, [0, 480, Z(hipD + 10)], [0, 1000, Z(hipD - 20)], personMat, sit).scale.z = 0.62;
     limb(46, 46, 80, [0, 990, Z(hipD - 20)], [0, 1070, Z(hipD - 30)], personMat, sit);
     ball(102, [0, 1150, Z(hipD - 40)], personMat, sit, 1.05);
-    // 椅子
     box(460, hipD - 300, hipD + 160, 395, 440, chairMat, 0, sit);
     box(440, hipD + 130, hipD + 160, 520, 900, chairMat, 0, sit);
     limb(18, 18, 360, [0, 395, Z(hipD - 70)], [0, 70, Z(hipD - 70)], chairMetal, sit);
     for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2, c = [Math.cos(a) * 300, 40, Z(hipD - 70) + Math.sin(a) * 300];
+      const a = (i / 5) * Math.PI * 2 + 0.3, c = [Math.cos(a) * 300, 40, Z(hipD - 70) + Math.sin(a) * 300];
       limb(12, 12, 300, [0, 70, Z(hipD - 70)], c, chairMetal, sit);
       ball(24, c, chairMat, sit);
     }
-    sit.position.x = S.W * 0.12;
-    people.add(sit);
+    sit.position.x = x;
+    return sit;
+  }
+
+  function buildPeople() {
+    disposeGroup(people);
+    people = new THREE.Group();
+    // 立位の患者（身長 1650）マイナ受付の前に立ちカウンターへ向く
+    const st = new THREE.Group();
+    for (const s of [-1, 1]) {
+      limb(62, 52, 820, [s * 90, 840, 0], [s * 90, 30, 0], personMat, st);
+      ball(55, [s * 90, 30, 30], personMat, st, 1.8);
+    }
+    limb(42, 34, 560, [-215, 1360, 0], [-240, 820, -40], personMat, st);
+    limb(42, 34, 330, [215, 1360, 0], [235, 1080, -60], personMat, st);
+    limb(34, 30, 300, [235, 1080, -60], [200, 1150, -330], personMat, st);
+    limb(160, 170, 560, [0, 830, 0], [0, 1390, 0], personMat, st).scale.z = 0.62;
+    limb(48, 48, 90, [0, 1380, 0], [0, 1460, 0], personMat, st);
+    ball(105, [0, 1545, 0], personMat, st, 1.05);
+    st.position.set(S.W / 2 - 330, 0, Z(-330));
+    people.add(st);
+    // 受付スタッフ 2名
+    for (const x of staffX()) people.add(seatedStaff(x));
+    people.traverse((o) => { o.castShadow = false; });
     people.visible = S.people;
     scene.add(people);
   }
+  const staffX = () => [-S.W / 4, S.W / 4];
+
+  // ---- equipment（寸法はメーカー公表値。モバイルモニターは一般的な外形） ----
+  const MONITORS = {
+    '15.6': { label: '15.6型', w: 356, h: 223, t: 9 },
+    '14':   { label: '14型',   w: 318, h: 200, t: 9 },
+    '13.3': { label: '13.3型', w: 305, h: 190, t: 9 },
+  };
+  const EQ = {
+    white: std({ color: 0xf1f1ee, roughness: 0.45 }),
+    black: std({ color: 0x1b1d1f, roughness: 0.5 }),
+    dark: std({ color: 0x2d3034, roughness: 0.55 }),
+    key: std({ color: 0x3b3f44, roughness: 0.6 }),
+    grey: std({ color: 0x9aa0a6, roughness: 0.5 }),
+    glass: std({ color: 0x0b0d0f, roughness: 0.15, metalness: 0.2 }),
+    bracket: std({ color: 0xa9adb1, metalness: 0.6, roughness: 0.4 }),
+  };
+  function uiCanvas(kind, i = 0) {
+    const c = document.createElement('canvas');
+    const g = c.getContext('2d');
+    const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    const T = (t, x, y, size, col, weight = 700) => { g.fillStyle = col; g.font = `${weight} ${size}px "Zen Kaku Gothic New", sans-serif`; g.fillText(t, x, y); };
+    if (kind === 'monitor') {
+      c.width = 512; c.height = 300;
+      R(0, 0, 512, 300, '#f2f5f7'); R(0, 0, 512, 34, ['#2c5a86', '#2f7a6b', '#7a5a2c', '#5a3c86'][i]);
+      T(['受付一覧', '電子カルテ', '予約', '会計'][i], 14, 24, 18, '#fff');
+      for (let r = 0; r < 7; r++) { R(14, 48 + r * 34, 484, 26, r % 2 ? '#e3e9ee' : '#ffffff'); R(22, 56 + r * 34, 60 + (r * 37) % 120, 10, '#b8c3cc'); R(250, 56 + r * 34, 90, 10, '#cfd7de'); }
+    } else if (kind === 'reader') {
+      c.width = 200; c.height = 300;
+      R(0, 0, 200, 300, '#ffffff'); R(0, 0, 200, 26, '#e9f2ef');
+      T('本人確認をします', 20, 70, 18, '#1f6b5c');
+      T('確認する方法を', 46, 110, 13, '#555', 500); T('選んでください', 46, 130, 13, '#555', 500);
+      g.fillStyle = '#2f8f78'; g.fillRect(24, 190, 152, 34); g.fillRect(24, 236, 152, 34);
+      T('顔認証', 72, 213, 15, '#fff'); T('暗証番号', 64, 259, 15, '#fff');
+    } else if (kind === 'lcd') {
+      c.width = 256; c.height = 48;
+      R(0, 0, 256, 48, '#9fb39a'); g.fillStyle = '#20301f'; g.font = '700 30px "IBM Plex Mono", monospace'; g.fillText('¥  1,230', 50, 36);
+    } else if (kind === 'term') {
+      c.width = 160; c.height = 256;
+      R(0, 0, 160, 256, '#ffffff'); R(0, 0, 160, 30, '#1f4f8a'); T('決済', 12, 21, 15, '#fff');
+      for (let r = 0; r < 3; r++) R(14, 50 + r * 62, 132, 48, ['#e7eef7', '#e8f4ec', '#f7efe4'][r]);
+    } else if (kind === 'pin') {
+      c.width = 200; c.height = 140;
+      R(0, 0, 200, 140, '#14181c'); T('お支払い金額', 16, 38, 16, '#9fd3ff'); T('¥1,230', 40, 92, 34, '#ffffff');
+    } else if (kind === 'phone') {
+      c.width = 64; c.height = 64;
+      R(0, 0, 64, 64, '#c9d6c8'); R(8, 14, 48, 6, '#2b3a2a'); R(8, 30, 30, 6, '#2b3a2a');
+    }
+    return c;
+  }
+  const scr = {};
+  function screenMats() {
+    const m = (cv) => new THREE.MeshBasicMaterial({ map: tex(cv), clippingPlanes: [clip], toneMapped: false });
+    scr.monitor = [0, 1, 2, 3].map((i) => m(uiCanvas('monitor', i)));
+    scr.reader = m(uiCanvas('reader'));
+    scr.lcd = m(uiCanvas('lcd'));
+    scr.term = m(uiCanvas('term'));
+    scr.pin = m(uiCanvas('pin'));
+    scr.phone = m(uiCanvas('phone'));
+  }
+  let equip = null, items = [];
+  function eqBox(w, d0, d1, y0, y1, mat, x) { return box(w, d0, d1, y0, y1, mat, x, equip); }
+  function screen(w, h, mat, x, y, d, face) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.position.set(x, y, Z(d));
+    if (face === 'staff') m.rotation.y = Math.PI;
+    if (face === 'up') m.rotation.x = -Math.PI / 2;
+    equip.add(m); return m;
+  }
+  function reg(name, cx, w, y0, y1, d0, d1, kind) { items.push({ name, x0: cx - w / 2, x1: cx + w / 2, y0, y1, d0, d1, kind }); }
+  function tag(text, x, y, d) { addLabel(text, [x, y, Z(d)], 'tag', 'tags', () => S.tags && S.equip); }
+
+  function buildEquip() {
+    disposeGroup(equip);
+    clearLabels('tags');
+    equip = new THREE.Group();
+    items = [];
+    const W = S.W, hw = W / 2, inW = W - 40, T = 680, CT = 1100;
+
+    // 壁面: モバイルモニター 4台（スタッフ側 上部壁、カウンター天板の直下）
+    const mon = MONITORS[S.mon];
+    const gap = Math.max(0, Math.min(12, (inW - 4 * mon.w) / 3));
+    const total = 4 * mon.w + 3 * gap, top = 1062, bot = top - mon.h;
+    for (let i = 0; i < 4; i++) {
+      const cx = -total / 2 + mon.w / 2 + i * (mon.w + gap);
+      eqBox(mon.w, 150, 150 + mon.t, bot, top, EQ.black, cx);
+      screen(mon.w - 12, mon.h - 22, scr.monitor[i], cx, (bot + top) / 2 + 4, 150 + mon.t + 0.6, 'staff');
+      reg(`モニター${i + 1}`, cx, mon.w, bot, top, 150, 150 + mon.t, 'monitor');
+    }
+    tag(`${mon.label}モニター ×4`, 0, bot - 14, 170);
+
+    // キーボード・マウス（各スタッフの正面）
+    for (const sx of staffX()) {
+      eqBox(440, 555, 685, T, T + 12, EQ.dark, sx);
+      eqBox(420, 563, 677, T + 12, T + 24, EQ.key, sx);
+      reg('キーボード', sx, 440, T, T + 24, 555, 685, 'desk');
+      const ms = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), EQ.dark);
+      ms.scale.set(31, 36, 56); ms.position.set(sx + 290, T, Z(625)); ms.castShadow = true;
+      equip.add(ms);
+      reg('マウス', sx + 290, 62, T, T + 36, 569, 681, 'desk');
+    }
+    tag('キーボード・マウス', -W / 4, T + 60, 620);
+    tag('キーボード・マウス', W / 4, T + 60, 620);
+
+    // レジ本体 CASIO TE-400（本体のみ W219×D293×H104）中央
+    eqBox(219, 225, 458, T, T + 62, EQ.white, 0);
+    eqBox(195, 245, 445, T + 62, T + 65, EQ.grey, 0);
+    eqBox(219, 165, 235, T, T + 104, EQ.white, 0);
+    screen(160, 30, scr.lcd, 0, T + 82, 235.6, 'staff');
+    reg('レジ本体 TE-400', 0, 219, T, T + 104, 165, 458, 'desk');
+    tag('レジ TE-400', 0, T + 150, 300);
+
+    // キャッシュレス決済端末 UA-P10NA 店舗側（W94×D161×H87）レジの右
+    const tx = 109.5 + 25 + 47;
+    eqBox(94, 170, 331, T, T + 87, EQ.white, tx);
+    screen(78, 135, scr.term, tx, T + 87.6, 250, 'up');
+    reg('決済端末(店舗側)', tx, 94, T, T + 87, 170, 331, 'desk');
+    tag('UA-P10NA 店舗側', tx, T + 130, 250);
+
+    // サーマルプリンター PRP-250（W140×D183.5×H126）レジの左
+    const px = -(109.5 + 25 + 70);
+    eqBox(140, 170, 353.5, T, T + 126, EQ.black, px);
+    eqBox(96, 300, 306, T + 126, T + 127, EQ.grey, px);
+    reg('プリンター PRP-250', px, 140, T, T + 126, 170, 353.5, 'desk');
+    tag('PRP-250', px, T + 170, 260);
+
+    // コードレス子機 JD-SF3CL（充電台 80×86×39、子機 48×24×167）机の両端
+    for (const s of [-1, 1]) {
+      const cx = s * (hw - 60);
+      eqBox(80, 170, 256, T, T + 39, EQ.white, cx);
+      eqBox(48, 201, 225, T + 14, T + 181, EQ.white, cx);
+      screen(36, 30, scr.phone, cx, T + 150, 225.6, 'staff');
+      reg('子機 JD-SF3CL', cx, 80, T, T + 181, 170, 256, 'desk');
+      tag('子機', cx, T + 230, 213);
+    }
+
+    // キャッシュドロア（TE-400 付属 約 W330×D360×H94）机下中央に吊り下げ
+    eqBox(340, 345, 685, 645, 655, EQ.bracket, 0);
+    eqBox(330, 335, 695, 551, 645, EQ.dark, 0);
+    eqBox(300, 693, 696, 570, 625, EQ.black, 0);
+    reg('キャッシュドロア', 0, 330, 551, 655, 335, 695, 'under');
+    tag('ドロア', 0, 520, 690);
+
+    // ThinkCentre M75q Tiny Gen 5（179×182.9×36.5）机下両端にアンダーマウント
+    for (const s of [-1, 1]) {
+      const cx = s * (hw - 140);
+      eqBox(195, 226, 413, 640, 655, EQ.bracket, cx);
+      eqBox(179, 228, 411, 603.5, 640, EQ.black, cx);
+      eqBox(150, 410.5, 411.5, 612, 632, EQ.dark, cx);
+      reg('PC M75q Tiny', cx, 195, 603.5, 655, 226, 413, 'under');
+      tag('M75q Tiny', cx, 575, 420);
+    }
+    // パイプ脚（干渉チェック用）
+    for (const s of [-1, 1]) reg('パイプ脚', s * (hw - 70), 60, 0, 655, 420, 690, 'leg');
+
+    // カウンター上: マイナンバーカードリーダー（160×150×280）患者から見て右端
+    const rx = hw - 100;
+    eqBox(160, 35, 185, CT, CT + 38, EQ.white, rx);
+    eqBox(118, 45, 108, CT + 38, CT + 40, EQ.dark, rx);
+    eqBox(160, 108, 185, CT + 38, CT + 280, EQ.white, rx);
+    eqBox(146, 106, 108, CT + 52, CT + 272, EQ.glass, rx);
+    screen(112, 168, scr.reader, rx + 12, CT + 162, 105.4, 'customer');
+    eqBox(10, 104, 106, CT + 190, CT + 240, EQ.dark, rx - 60);
+    reg('マイナ受付', rx, 160, CT, CT + 280, 35, 185, 'counter');
+    tag('マイナンバーカードリーダー', rx, CT + 330, 110);
+
+    // カウンター上: UA-P10NA 顧客側（117×82×49）
+    const qx = rx - 80 - 40 - 58.5;
+    eqBox(117, 70, 152, CT, CT + 49, EQ.dark, qx);
+    screen(84, 58, scr.pin, qx, CT + 49.6, 108, 'up');
+    reg('決済端末(顧客側)', qx, 117, CT, CT + 49, 70, 152, 'counter');
+    tag('UA-P10NA 顧客側', qx, CT + 110, 110);
+
+    equip.visible = S.equip;
+    scene.add(equip);
+  }
+
+  // ---- 配置チェック ----
+  function runChecks() {
+    const out = [];
+    const W = S.W, hw = W / 2, inW = W - 40, r = Math.round;
+    const mons = items.filter((i) => i.kind === 'monitor');
+    const total = r(mons[3].x1 - mons[0].x0), mon = MONITORS[S.mon];
+    if (total > W) out.push(['ng', `${mon.label}モニター4台を横に並べると ${total}mm。カウンター幅 ${W}mm から左右に約 ${r((total - W) / 2)}mm ずつはみ出します`]);
+    else if (total > inW) out.push(['warn', `モニター4台 ${total}mm はすき間なしで、両端が側板の前まで掛かります（内寸 ${inW}mm）`]);
+    else out.push(['ok', `モニター4台 ${total}mm（すき間 ${r((total - 4 * mon.w) / 3)}mm）が内寸 ${inW}mm に収まります`]);
+    out.push(['ok', `モニターの高さ ${mon.h}mm は机上〜天板下の壁 390mm に1段で収まります（2段は ${mon.h * 2}mm で入りません）`]);
+
+    const ov = (a, b) => a.x0 < b.x1 - 0.5 && b.x0 < a.x1 - 0.5 && a.y0 < b.y1 - 0.5 && b.y0 < a.y1 - 0.5 && a.d0 < b.d1 - 0.5 && b.d0 < a.d1 - 0.5;
+    const solid = items.filter((i) => i.kind !== 'monitor');
+    let hits = 0;
+    for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) {
+      const a = solid[i], b = solid[j];
+      if (a.name === b.name) continue;
+      if (ov(a, b)) { hits++; out.push(['ng', `${a.name} と ${b.name} がぶつかります`]); }
+    }
+    for (const it of items) {
+      if (it.kind === 'desk' && (it.x0 < -hw || it.x1 > hw || it.d1 > 710)) out.push(['ng', `${it.name} が机からはみ出します`]);
+      if (it.kind === 'counter' && (it.x0 < -hw || it.x1 > hw || it.d1 > 220)) out.push(['ng', `${it.name} がカウンター天板（奥行220）からはみ出します`]);
+    }
+    if (!hits) out.push(['ok', '机上・机下・カウンター上の機器どうし、パイプ脚との干渉はありません']);
+
+    // 座った目線（目の高さ 1140、壁から 830mm）からモニター下端が隠れるか
+    const E = { y: 1140, d: 980 };
+    for (const it of items.filter((i) => i.kind === 'desk')) {
+      let worst = 0, who = [];
+      for (const m of mons) {
+        if (it.x1 <= m.x0 || it.x0 >= m.x1) continue;
+        const ys = E.y - (E.y - it.y1) * (E.d - m.d1) / (E.d - it.d0);
+        const hid = ys - m.y0;
+        if (hid > 3) { worst = Math.max(worst, hid); who.push(m.name.replace('モニター', '')); }
+      }
+      if (worst) out.push(['warn', `座った目線から、${it.name} がモニター${who.join('・')}の下端を約 ${r(worst)}mm 隠します`]);
+    }
+
+    // 膝まわり
+    const knee = W / 4 - 155;
+    const drawerGap = r(knee - 165);
+    out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 551mm（座った太もも上端 約545mm）`]);
+    out.push(['ok', 'PC は机下の壁側（奥行 226〜413）に吊るので、膝とは当たりません']);
+    out.push(['ok', `マイナ受付の画面中心は床から約 ${CT0 + 162}mm。立った患者（目の高さ 約1530mm）から見下ろす角度です`]);
+
+    const ul = document.getElementById('checks');
+    ul.replaceChildren(...out.map(([lv, t]) => {
+      const li = document.createElement('li');
+      const b = document.createElement('span'); b.className = 'chip ' + lv; b.textContent = { ok: 'OK', warn: '注意', ng: 'NG' }[lv];
+      const s = document.createElement('span'); s.textContent = t;
+      li.append(b, s); return li;
+    }));
+    const n = { ng: 0, warn: 0 }; out.forEach(([lv]) => { if (n[lv] !== undefined) n[lv]++; });
+    document.getElementById('checkSum').textContent = n.ng || n.warn ? `NG ${n.ng} ・ 注意 ${n.warn}` : 'すべて OK';
+  }
+  const CT0 = 1100;
 
   // ---- dimensions ----
   function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
   const dimMat = new THREE.LineBasicMaterial({ color: 0x2c5a86, depthTest: false, transparent: true });
-  function addLabel(text, pos, cls = 'dim', group = null) {
+  function addLabel(text, pos, cls, owner, show) {
     const el = document.createElement('div');
     el.className = cls; el.textContent = text;
     labelsEl.appendChild(el);
-    labels.push({ el, pos: new V3(...pos), group });
+    labels.push({ el, pos: new V3(...pos), owner, show });
+  }
+  function clearLabels(owner) {
+    labels = labels.filter((l) => { if (l.owner === owner) { l.el.remove(); return false; } return true; });
   }
   function dim(a, b, off, text) {
     const A = new V3(...a), B = new V3(...b), O = new V3(...off);
@@ -515,12 +800,11 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     const l = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), dimMat);
     l.renderOrder = 10;
     dimGroup.add(l);
-    addLabel(text, a2.clone().add(b2).multiplyScalar(0.5).toArray(), 'dim', dimGroup);
+    addLabel(text, a2.clone().add(b2).multiplyScalar(0.5).toArray(), 'dim', 'dims', () => S.dims);
   }
   function buildDims() {
     disposeGroup(dimGroup);
-    labels.forEach((l) => l.el.remove());
-    labels = [];
+    clearLabels('dims');
     dimGroup = new THREE.Group();
     const hw = S.W / 2, F = Z(0), B = Z(710), C = Z(220);
     dim([-hw, 1100, F], [hw, 1100, F], [0, 140, 0], String(S.W));
@@ -536,8 +820,8 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   }
 
   function rebuild() {
-    buildDesk(); buildPeople(); buildDims();
-    updateLight(); updateSection();
+    buildDesk(); buildPeople(); buildEquip(); buildDims();
+    updateLight(); updateSection(); runChecks();
   }
 
   // ---- toggles ----
@@ -582,11 +866,10 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     staff: { p: [600, 1400, -2700], t: [0, 650, 0] },
     side:  { p: [3300, 650, 0], t: [0, 560, 0] },
     top:   { p: [0, 3800, 60], t: [0, 0, 0] },
-    seat:  { p: [S.W * 0.12, 1150, Z(1150)], t: [0, 900, Z(-200)] },
   };
   let tween = null;
   function go(name) {
-    const v = name === 'seat' ? { p: [S.W * 0.12, 1150, Z(1120)], t: [S.W * 0.06, 950, Z(-400)] } : VIEWS[name];
+    const v = name === 'seat' ? { p: [-S.W / 4, 1140, Z(980)], t: [-S.W / 4 + 120, 900, Z(150)] } : VIEWS[name];
     const scale = name === 'seat' ? 1 : Math.max(1, S.W / 1415) ** 0.8;
     const to = new V3(...v.t), p = new V3(...v.p);
     const toP = to.clone().add(p.sub(to).multiplyScalar(scale));
@@ -605,6 +888,14 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   const on = (id, fn) => document.getElementById(id).addEventListener('change', (e) => fn(e.target.checked));
   on('t-dims', (v) => { S.dims = v; dimGroup.visible = v; });
   on('t-people', (v) => { S.people = v; people.visible = v; });
+  on('t-equip', (v) => { S.equip = v; equip.visible = v; });
+  on('t-tags', (v) => { S.tags = v; });
+  document.getElementById('monSize').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.mon = b.dataset.mon;
+    document.querySelectorAll('#monSize button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    buildEquip(); updateSection(); runChecks();
+  });
   on('t-light', (v) => { S.light = v; updateLight(); });
   on('t-night', (v) => { S.night = v; updateTheme(); });
   on('t-section', (v) => {
@@ -659,6 +950,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   new ResizeObserver(resize).observe(stage);
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const tmp = new V3();
+  const ray = new THREE.Raycaster();
   function frame(now) {
     if (tween) {
       const k = Math.min(1, (now - tween.t0) / 800), e = ease(k);
@@ -670,9 +962,15 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     renderer.render(scene, camera);
     const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
     for (const l of labels) {
-      const show = !l.group || l.group.visible;
+      const show = !l.show || l.show();
       tmp.copy(l.pos).project(camera);
       if (!show || tmp.z > 1 || tmp.z < -1) { l.el.hidden = true; continue; }
+      if (l.owner === 'tags') {
+        const dist = camera.position.distanceTo(l.pos);
+        ray.set(camera.position, l.pos.clone().sub(camera.position).normalize());
+        ray.far = dist - 15;
+        if (ray.intersectObjects(desk.children, false).length) { l.el.hidden = true; continue; }
+      }
       l.el.hidden = false;
       l.el.style.transform = `translate(${(tmp.x * 0.5 + 0.5) * w}px, ${(-tmp.y * 0.5 + 0.5) * h}px) translate(-50%, -50%)`;
     }
@@ -680,6 +978,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   }
 
   applyFinishes();
+  screenMats();
   rebuild();
   updateTheme();
   resize();
