@@ -15,6 +15,7 @@
   --stage: #dfe3e1;
   --floor: #c9ccc7;
   --grid: #b4b9b5;
+  --plan-desk: #ffffff; --plan-wood: #e7dcd2; --plan-item: #dfe7ee; --plan-citem: #f0e3d3;
   --ok: #2e6b47; --ok-bg: #dcefe3; --warn: #8a5a00; --warn-bg: #f7ead0; --ng: #a3302a; --ng-bg: #f6dcda;
   --f-ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   --f-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -23,21 +24,20 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14181b; --panel: #1b2024; --fg: #e3e7e8; --muted: #95a0a6; --line: #2d3439;
-    --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
+    --plan-desk: #20262a; --plan-wood: #3a3029; --plan-item: #2d3a45; --plan-citem: #44372b; --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
     --accent: #7fb0dc; --accent-soft: #233545; --stage: #1f2529; --floor: #3a3f42; --grid: #4a5054;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #14181b; --panel: #1b2024; --fg: #e3e7e8; --muted: #95a0a6; --line: #2d3439;
-  --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
+  --plan-desk: #20262a; --plan-wood: #3a3029; --plan-item: #2d3a45; --plan-citem: #44372b; --ok: #8fd3a8; --ok-bg: #1f3a2a; --warn: #f0c36a; --warn-bg: #3d3018; --ng: #f19a93; --ng-bg: #43211f;
     --accent: #7fb0dc; --accent-soft: #233545; --stage: #1f2529; --floor: #3a3f42; --grid: #4a5054;
   color-scheme: dark;
 }
-html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-ui); font-size: 14px; line-height: 1.6; }
 .app {
-  height: 100%; box-sizing: border-box; padding: 16px;
+  height: calc(100vh - 32px); min-height: 560px; box-sizing: border-box; padding: 16px 16px 0;
   display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px;
 }
 .stage {
@@ -142,9 +142,44 @@ dd { margin: 0; }
 dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
 .note { font-size: 12px; color: var(--muted); margin: 0; }
 
+
+.sheet { padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.sheet-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.sh { font-size: 17px; font-weight: 700; letter-spacing: .02em; margin: 0; color: var(--fg); padding: 0; border: 0; }
+.plan-wrap, .table-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+.plan-wrap svg { display: block; width: 100%; max-width: 1000px; min-width: 720px; height: auto; margin: 0 auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 26px; height: 12px; vertical-align: -1px; margin-right: 6px; border-radius: 2px; }
+.lg-item { background: var(--plan-item); border: 1.5px solid var(--fg); }
+.lg-citem { background: var(--plan-citem); border: 1.5px solid var(--fg); }
+.lg-under { border: 1.5px dashed var(--muted); }
+.lg-mon { border: 1.5px dashed var(--accent); }
+.pl-desk { fill: var(--plan-desk); stroke: var(--fg); stroke-width: 3; }
+.pl-counter { fill: var(--plan-wood); stroke: var(--fg); stroke-width: 3; }
+.pl-item { fill: var(--plan-item); stroke: var(--fg); stroke-width: 2.5; }
+.pl-citem { fill: var(--plan-citem); stroke: var(--fg); stroke-width: 2.5; }
+.pl-under { fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-dasharray: 14 9; }
+.pl-mon { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 14 9; }
+.pl-leg { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
+.pl-hidden { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 14 9; }
+.pl-person { fill: none; stroke: var(--line); stroke-width: 3; }
+.pl-faint { fill: var(--muted); font-size: 30px; text-anchor: middle; font-family: var(--f-ui); }
+.pl-zone { fill: var(--muted); font-size: 34px; font-weight: 700; letter-spacing: .2em; text-anchor: middle; font-family: var(--f-ui); }
+.pl-badge { fill: var(--fg); stroke: var(--panel); stroke-width: 4; }
+.pl-num { fill: var(--panel); font-size: 26px; font-weight: 700; text-anchor: middle; font-family: var(--f-num); }
+.pl-dim { stroke: var(--accent); stroke-width: 2; }
+.pl-dimt { fill: var(--accent); font-size: 30px; text-anchor: middle; font-family: var(--f-num); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; font-weight: 500; letter-spacing: .08em; color: var(--muted); background: var(--bg); white-space: nowrap; }
+td.n { font-family: var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.ref td { background: var(--warn-bg); background: color-mix(in srgb, var(--warn-bg) 45%, transparent); }
+.no { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--fg); color: var(--panel); font-family: var(--f-num); font-size: 11.5px; font-weight: 700; }
+td .chip { display: inline-block; padding: 1px 6px; }
+
 @media (max-width: 760px) {
-  html, body { height: auto; }
-  .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; }
+  .app { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; }
   .panel { overflow: visible; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -172,9 +207,9 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     <section>
       <h2>視点</h2>
       <div class="views" id="views">
-        <button type="button" data-view="iso" aria-pressed="true">斜め</button>
+        <button type="button" data-view="iso">斜め</button>
         <button type="button" data-view="front">患者側</button>
-        <button type="button" data-view="staff">スタッフ側</button>
+        <button type="button" data-view="staff" aria-pressed="true">スタッフ側</button>
         <button type="button" data-view="side">側面</button>
         <button type="button" data-view="top">上から</button>
         <button type="button" data-view="seat">座った目線</button>
@@ -252,6 +287,32 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   </aside>
 </div>
 
+<section class="sheet" aria-label="平面図と設置機器の寸法表">
+  <div class="sheet-head">
+    <h2 class="sh">平面図</h2>
+    <p class="note">単位 mm ・ スタッフ側から見た向き（上が患者側）・ 横幅とモニターサイズの変更に連動</p>
+  </div>
+  <div class="legend">
+    <span><i class="lg-item"></i>机上の機器</span>
+    <span><i class="lg-citem"></i>カウンター上の機器</span>
+    <span><i class="lg-mon"></i>壁のモニター（天板の下）</span>
+    <span><i class="lg-under"></i>机下の機器・パイプ脚</span>
+  </div>
+  <div class="plan-wrap"><svg id="plan" role="img" aria-label="受付カウンターと機器配置の平面図"></svg></div>
+
+  <div class="sheet-head" style="margin-top:10px">
+    <h2 class="sh">設置機器 寸法表</h2>
+    <p class="note">外形寸法は 幅 × 奥行 × 高さ（mm）。番号は平面図と共通</p>
+  </div>
+  <div class="table-wrap">
+    <table id="eqTable">
+      <thead><tr><th>No.</th><th>機器</th><th>型番</th><th>外形寸法 W×D×H</th><th>数量</th><th>設置場所</th><th>出典・備考</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="note">※ レジスター（No.5）とキャッシュドロア（No.6）は、類似機種の CASIO TE-400 の寸法を参考値として載せています。実際に導入する機種の寸法で確認してください。</p>
+</section>
+
 <script>
 // 3Dライブラリを CDN から読み込む（つながらない CDN があれば次の CDN を試す）
 function loadScript(urls) {
@@ -294,7 +355,7 @@ function start() {
   };
   const DESKS = { white: { name: 'ホワイト', c: '#eceae4' }, grey: { name: 'ライトグレー', c: '#c4c6c6' }, wood: { name: '木目', c: null } };
   const CLOTHS = { ivory: { name: 'アイボリー', c: '#ebe6db' }, grey: { name: 'グレー', c: '#cfcfcb' }, mint: { name: 'ミント', c: '#cfdcd6' } };
-  const S = { W: 1415, wood: 'oak', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '16', light: true, night: false, section: false, cut: 0 };
+  const S = { W: 1415, wood: 'walnut', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '16', light: true, night: false, section: false, cut: 0 };
 
   // ---- renderer / scene ----
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -816,8 +877,125 @@ function start() {
     }));
     const n = { ng: 0, warn: 0 }; out.forEach(([lv]) => { if (n[lv] !== undefined) n[lv]++; });
     document.getElementById('checkSum').textContent = n.ng || n.warn ? `NG ${n.ng} ・ 注意 ${n.warn}` : 'すべて OK';
+    renderPlan(); renderTable();
   }
   const CT0 = 1100;
+
+  // ---- 平面図・寸法表 ----
+  const SPEC = [
+    { no: 1, name: 'モバイルモニター', model: 'Pisichen 16型 タッチ（1920×1200）', size: () => { const m = MONITORS[S.mon]; return `${m.w}×${m.t}×${m.h}`; }, qty: '4', place: 'スタッフ側の壁（カウンター天板の直下）', note: () => S.mon === '16' ? '販売ページ掲載値（14×0.39×9.2インチ）を換算' : `比較用の${MONITORS[S.mon].label}（一般的な外形）` },
+    { no: 2, name: 'マイナンバーカードリーダー', model: '顔認証付きカードリーダー', size: '160×150×280', qty: '1', place: 'カウンター上・患者から見て右端', note: '提示画像の約寸' },
+    { no: 3, name: 'キャッシュレス決済端末（顧客側）', model: 'SHARP UA-P10NA', size: '117×82×49', qty: '1', place: 'カウンター上', note: 'メーカー公表値（約）' },
+    { no: 4, name: 'キャッシュレス決済端末（店舗側）', model: 'SHARP UA-P10NA', size: '94×161×87', qty: '1', place: '机上・レジの横', note: 'メーカー公表値（約）' },
+    { no: 5, name: 'レジスター本体', model: 'CASIO TE-400（類似機種）', size: '219×293×104', qty: '1', place: '机上中央', note: '参考値：類似機種の寸法', ref: true },
+    { no: 6, name: 'キャッシュドロア', model: 'TE-400 付属ドロア（類似機種）', size: '330×360×94', qty: '1', place: '机下中央', note: '参考値：TE-400 全体 330×360×198 から本体分を引いた推定', ref: true },
+    { no: 7, name: 'サーマルプリンター', model: 'エフケイシステム PRP-250', size: '140×183.5×126', qty: '1', place: '机上・レジの横', note: '後継の PRP-250II の公表値' },
+    { no: 8, name: 'コードレス電話 子機', model: 'SHARP JD-SF3CL-W（子機のみ）', size: '充電台 80×86×39 ／ 子機 48×24×167', qty: '2', place: '机上の両端', note: 'メーカー公表値（約）' },
+    { no: 9, name: 'ミニPC', model: 'Lenovo ThinkCentre M75q Tiny Gen 5', size: '179×182.9×36.5', qty: '2', place: '机下の両端・手前（アンダーマウント）', note: 'メーカー公表値（ゴム足込み）' },
+    { no: 10, name: 'ミニPC（マイナ受付制御用）', model: 'HP Elite Mini 805 G8', size: '177×175×34', qty: '1', place: '机下・左の M75q の右隣（アンダーマウント）', note: 'メーカー公表値' },
+    { no: 11, name: 'キーボード', model: '—', size: '440×130×24', qty: '2', place: '机上・各スタッフの正面', note: '一般的なフルサイズを想定' },
+    { no: 12, name: 'マウス', model: '—', size: '62×112×36', qty: '2', place: '机上・キーボードの右', note: '一般的なサイズを想定' },
+  ];
+  const NO_OF = (name) => {
+    if (name.startsWith('モニター')) return 1;
+    return { 'マイナ受付': 2, '決済端末(顧客側)': 3, '決済端末(店舗側)': 4, 'レジ本体 TE-400': 5, 'キャッシュドロア': 6, 'プリンター PRP-250': 7, '子機 JD-SF3CL': 8, 'PC M75q Tiny': 9, 'PC Elite Mini 805 G8': 10, 'キーボード': 11, 'マウス': 12 }[name];
+  };
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function sv(tag, attrs, parent, text) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    parent.appendChild(e);
+    return e;
+  }
+  function renderPlan() {
+    const svg = document.getElementById('plan');
+    svg.replaceChildren();
+    const W = S.W, hw = W / 2;
+    // スタッフ側から見た向き: 上が患者側、スタッフから見て左（+x）が図の左
+    const PX = (x) => -x;
+    const pad = 300, top = -540, bottom = 1320;
+    svg.setAttribute('viewBox', `${-hw - pad} ${top} ${W + pad * 2} ${bottom - top}`);
+    const rect = (x0, x1, d0, d1, cls) => sv('rect', { x: PX(x1), y: d0, width: x1 - x0, height: d1 - d0, class: cls }, svg);
+
+    // 人・椅子（目安）
+    sv('circle', { cx: PX(hw - 330), cy: -330, r: 170, class: 'pl-person' }, svg);
+    sv('text', { x: PX(hw - 330), y: -320, class: 'pl-faint' }, svg, '患者');
+    for (const sx of staffX()) {
+      sv('circle', { cx: PX(sx), cy: 1000, r: 240, class: 'pl-person' }, svg);
+      sv('text', { x: PX(sx), y: 1010, class: 'pl-faint' }, svg, 'スタッフ席');
+    }
+    sv('text', { x: 0, y: -470, class: 'pl-zone' }, svg, '患者側');
+    sv('text', { x: 0, y: 1300, class: 'pl-zone' }, svg, 'スタッフ側');
+
+    // 家具: 机 → カウンター天板
+    rect(-hw, hw, 20, 710, 'pl-desk');
+    rect(-hw, hw, 0, 220, 'pl-counter');
+    sv('line', { x1: -hw + 20, x2: hw - 20, y1: 150, y2: 150, class: 'pl-hidden' }, svg);
+
+    // 機器
+    const order = { leg: 0, under: 1, monitor: 2, desk: 3, counter: 4 };
+    const list = [...items].sort((a, b) => order[a.kind] - order[b.kind]);
+    for (const it of list) {
+      const cls = { leg: 'pl-leg', under: 'pl-under', monitor: 'pl-mon', desk: 'pl-item', counter: 'pl-citem' }[it.kind];
+      rect(it.x0, it.x1, it.d0, it.d1, cls);
+    }
+    for (const s of [-1, 1]) sv('circle', { cx: PX(s * (hw - 70)), cy: 600, r: 25, class: 'pl-leg' }, svg);
+
+    // 番号
+    const mons = items.filter((i) => i.kind === 'monitor');
+    const badge = (n, x, y) => {
+      sv('circle', { cx: x, cy: y, r: 24, class: 'pl-badge' }, svg);
+      sv('text', { x, y: y + 9, class: 'pl-num' }, svg, String(n));
+    };
+    for (const m of mons) badge(1, PX((m.x0 + m.x1) / 2), 120);
+    for (const it of items) {
+      const n = NO_OF(it.name);
+      if (!n || n === 1) continue;
+      badge(n, PX((it.x0 + it.x1) / 2), (it.d0 + it.d1) / 2);
+    }
+
+    // 寸法
+    const dimH = (x0, x1, y, label) => {
+      sv('line', { x1: PX(x0), x2: PX(x1), y1: y, y2: y, class: 'pl-dim' }, svg);
+      for (const x of [x0, x1]) {
+        sv('line', { x1: PX(x), x2: PX(x), y1: y - 40, y2: y + 40, class: 'pl-dim' }, svg);
+        sv('line', { x1: PX(x) - 14, x2: PX(x) + 14, y1: y + 14, y2: y - 14, class: 'pl-dim' }, svg);
+      }
+      sv('text', { x: PX((x0 + x1) / 2), y: y - 16, class: 'pl-dimt' }, svg, label);
+    };
+    const dimV = (d0, d1, x, label) => {
+      sv('line', { x1: x, x2: x, y1: d0, y2: d1, class: 'pl-dim' }, svg);
+      for (const d of [d0, d1]) {
+        sv('line', { x1: x - 40, x2: x + 40, y1: d, y2: d, class: 'pl-dim' }, svg);
+        sv('line', { x1: x - 14, x2: x + 14, y1: d + 14, y2: d - 14, class: 'pl-dim' }, svg);
+      }
+      const t = sv('text', { x: x - 16, y: (d0 + d1) / 2, class: 'pl-dimt', transform: `rotate(-90 ${x - 16} ${(d0 + d1) / 2})` }, svg, label);
+    };
+    dimH(-hw, hw, -150, String(W));
+    const mTotal = Math.round(mons[3].x1 - mons[0].x0);
+    if (mTotal > W) dimH(mons[0].x0, mons[3].x1, -60, `モニター4台 ${mTotal}`);
+    dimV(0, 220, hw + 110, '220');
+    dimV(220, 710, hw + 110, '490');
+    dimV(0, 710, hw + 220, '710');
+  }
+  function renderTable() {
+    const tb = document.querySelector('#eqTable tbody');
+    tb.replaceChildren(...SPEC.map((r) => {
+      const tr = document.createElement('tr');
+      if (r.ref) tr.className = 'ref';
+      const cells = [r.no, r.name, r.model, typeof r.size === 'function' ? r.size() : r.size, r.qty, r.place, typeof r.note === 'function' ? r.note() : r.note];
+      cells.forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i === 0) { const b = document.createElement('span'); b.className = 'no'; b.textContent = v; td.append(b); }
+        else if (i === 6 && r.ref) { const b = document.createElement('span'); b.className = 'chip warn'; b.textContent = '参考値'; td.append(b, ' ', v.replace('参考値：', '')); }
+        else td.textContent = v;
+        if (i === 3 || i === 4) td.className = 'n';
+        tr.append(td);
+      });
+      return tr;
+    }));
+  }
 
   // ---- dimensions ----
   function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
@@ -1026,6 +1204,9 @@ function start() {
   applyFinishes();
   screenMats();
   rebuild();
+  camera.position.set(...VIEWS.staff.p);
+  controls.target.set(...VIEWS.staff.t);
+  controls.update();
   updateTheme();
   resize();
   requestAnimationFrame(frame);
