@@ -76,6 +76,11 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-ui); font-s
 .chip.warn { background: var(--warn-bg); color: var(--warn); }
 .chip.ng { background: var(--ng-bg); color: var(--ng); }
 .sum { float: right; font-family: var(--f-num); letter-spacing: 0; color: var(--fg); }
+.load-error {
+  position: absolute; inset: 16px; margin: auto; height: fit-content; max-width: 30em;
+  background: var(--panel); color: var(--ng); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; font-size: 13px; line-height: 1.6;
+}
 .hint {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted);
   background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 2px 8px; border-radius: 4px;
@@ -156,6 +161,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
 <div class="app">
   <div class="stage" id="stage">
     <div class="labels" id="labels"></div>
+    <div class="load-error" id="loadError" role="alert" hidden></div>
     <div class="hint" id="hint">ドラッグで回転 ・ 右ドラッグ / 2本指で移動 ・ ホイール / ピンチで拡大</div>
   </div>
 
@@ -254,11 +260,34 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   </aside>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lights/RectAreaLightUniformsLib.js"></script>
 <script>
-(() => {
+// 3Dライブラリを CDN から読み込む（つながらない CDN があれば次の CDN を試す）
+function loadScript(urls) {
+  return new Promise((resolve, reject) => {
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) return reject(new Error(urls[0]));
+      const el = document.createElement('script');
+      el.src = urls[i++];
+      el.onload = resolve;
+      el.onerror = () => { el.remove(); next(); };
+      document.head.appendChild(el);
+    };
+    next();
+  });
+}
+function showError(msg) {
+  const el = document.getElementById('loadError');
+  el.textContent = msg;
+  el.hidden = false;
+}
+const EX = (f) => ['https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/' + f, 'https://unpkg.com/three@0.128.0/examples/js/' + f];
+loadScript(['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js', 'https://unpkg.com/three@0.128.0/build/three.min.js'])
+  .then(() => Promise.all([loadScript(EX('controls/OrbitControls.js')), loadScript(EX('lights/RectAreaLightUniformsLib.js'))]))
+  .then(() => { try { start(); } catch (e) { console.error(e); showError('3D表示を開始できませんでした。ブラウザの WebGL（ハードウェアアクセラレーション）が無効になっていないか確認してください。（' + e.message + '）'); } })
+  .catch((e) => showError('3Dライブラリを読み込めませんでした。インターネット接続、またはネットワークのフィルタで CDN（cdnjs / jsdelivr / unpkg）が止められていないか確認してください。（' + e.message + '）'));
+
+function start() {
   const V3 = THREE.Vector3;
   const stage = document.getElementById('stage');
   const labelsEl = document.getElementById('labels');
@@ -690,14 +719,15 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     reg('キャッシュドロア', 0, 330, 551, 655, 335, 695, 'under');
     tag('ドロア', 0, 520, 690);
 
-    // ThinkCentre M75q Tiny Gen 5（179×182.9×36.5）机下両端にアンダーマウント
+    // ThinkCentre M75q Tiny Gen 5（179×182.9×36.5）机下両端の手前にアンダーマウント
+    // 前面（電源・USB）をスタッフ側へ。パイプ脚の天板受けを避けて内側へ寄せる
     for (const s of [-1, 1]) {
-      const cx = s * (hw - 140);
-      eqBox(195, 226, 413, 640, 655, EQ.bracket, cx);
-      eqBox(179, 228, 411, 603.5, 640, EQ.black, cx);
-      eqBox(150, 410.5, 411.5, 612, 632, EQ.dark, cx);
-      reg('PC M75q Tiny', cx, 195, 603.5, 655, 226, 413, 'under');
-      tag('M75q Tiny', cx, 575, 420);
+      const cx = s * (hw - 207.5);
+      eqBox(195, 490, 677, 640, 655, EQ.bracket, cx);
+      eqBox(179, 492, 675, 603.5, 640, EQ.black, cx);
+      eqBox(150, 675, 676, 612, 632, EQ.dark, cx);
+      reg('PC M75q Tiny', cx, 195, 603.5, 655, 490, 677, 'under');
+      tag('M75q Tiny', cx, 575, 690);
     }
     // パイプ脚（干渉チェック用）
     for (const s of [-1, 1]) reg('パイプ脚', s * (hw - 70), 60, 0, 655, 420, 690, 'leg');
@@ -766,7 +796,14 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     const knee = W / 4 - 155;
     const drawerGap = r(knee - 165);
     out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 551mm（座った太もも上端 約545mm）`]);
-    out.push(['ok', 'PC は机下の壁側（奥行 226〜413）に吊るので、膝とは当たりません']);
+    // PC と太もも（座位: 太もも上端 約545mm、各スタッフ中心 ±155mm、奥行 640〜1060）
+    for (const pc of items.filter((i) => i.name === 'PC M75q Tiny')) {
+      const overX = staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155);
+      const clear = r(pc.y0 - 545);
+      if (overX && pc.d1 > 640) out.push([clear < 80 ? 'warn' : 'ok', `手前に移した PC が、スタッフの太ももの外側寄りの真上にかかります。PC下端は床から ${r(pc.y0)}mm、太もも上端とのすき間 約${clear}mm。椅子を高くすると当たります`]);
+      else out.push(['ok', 'PC は膝・太ももの上にかかりません']);
+      break;
+    }
     out.push(['ok', `マイナ受付の画面中心は床から約 ${CT0 + 162}mm。立った患者（目の高さ 約1530mm）から見下ろす角度です`]);
 
     const ul = document.getElementById('checks');
@@ -991,7 +1028,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
   updateTheme();
   resize();
   requestAnimationFrame(frame);
-})();
+}
 </script>
 </body>
 </html>
