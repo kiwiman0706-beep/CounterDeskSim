@@ -201,7 +201,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
     <section>
       <h2>モバイルモニター</h2>
       <div class="views" id="monSize">
-        <button type="button" data-mon="15.6" aria-pressed="true">15.6型</button>
+        <button type="button" data-mon="16" aria-pressed="true">16型（使用機種）</button>
         <button type="button" data-mon="14">14型</button>
         <button type="button" data-mon="13.3">13.3型</button>
       </div>
@@ -248,7 +248,7 @@ dd .n { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
       </dl>
     </section>
 
-    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは一般的な外形、ドロアは TE-400 全体寸法から本体分を引いた推定）。</p>
+    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは Pisichen 16型の販売ページ記載の外形、ドロアは TE-400 全体寸法から本体分を引いた推定）。</p>
   </aside>
 </div>
 
@@ -294,7 +294,7 @@ function start() {
   };
   const DESKS = { white: { name: 'ホワイト', c: '#eceae4' }, grey: { name: 'ライトグレー', c: '#c4c6c6' }, wood: { name: '木目', c: null } };
   const CLOTHS = { ivory: { name: 'アイボリー', c: '#ebe6db' }, grey: { name: 'グレー', c: '#cfcfcb' }, mint: { name: 'ミント', c: '#cfdcd6' } };
-  const S = { W: 1415, wood: 'oak', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '15.6', light: true, night: false, section: false, cut: 0 };
+  const S = { W: 1415, wood: 'oak', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '16', light: true, night: false, section: false, cut: 0 };
 
   // ---- renderer / scene ----
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -572,7 +572,7 @@ function start() {
 
   // ---- equipment（寸法はメーカー公表値。モバイルモニターは一般的な外形） ----
   const MONITORS = {
-    '15.6': { label: '15.6型', w: 356, h: 223, t: 9 },
+    '16':   { label: '16型', w: 356, h: 234, t: 10 },   // Pisichen 16インチ タッチ 1920×1200（約 356×234×10）
     '14':   { label: '14型',   w: 318, h: 200, t: 9 },
     '13.3': { label: '13.3型', w: 305, h: 190, t: 9 },
   };
@@ -721,6 +721,16 @@ function start() {
       reg('PC M75q Tiny', cx, 195, 603.5, 655, 490, 677, 'under');
       tag('M75q Tiny', cx, 575, 690);
     }
+    // HP Elite Mini 805 G8（177×175×34）マイナ受付の制御用。スタッフから見て左の M75q の右隣（中央寄り）
+    {
+      const m75x0 = hw - 207.5 - 97.5;            // 左の M75q マウントの内側端
+      const cx = m75x0 - 12 - 96.5;
+      eqBox(193, 490, 669, 640, 655, EQ.bracket, cx);
+      eqBox(177, 492, 667, 606, 640, EQ.black, cx);
+      eqBox(140, 667, 668, 614, 632, EQ.dark, cx);
+      reg('PC Elite Mini 805 G8', cx, 193, 606, 655, 490, 669, 'under');
+      tag('Elite Mini 805 G8', cx, 545, 690);
+    }
     // パイプ脚（干渉チェック用）
     for (const s of [-1, 1]) reg('パイプ脚', s * (hw - 70), 60, 0, 655, 420, 690, 'leg');
 
@@ -789,13 +799,12 @@ function start() {
     const drawerGap = r(knee - 165);
     out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 551mm（座った太もも上端 約545mm）`]);
     // PC と太もも（座位: 太もも上端 約545mm、各スタッフ中心 ±155mm、奥行 640〜1060）
-    for (const pc of items.filter((i) => i.name === 'PC M75q Tiny')) {
-      const overX = staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155);
-      const clear = r(pc.y0 - 545);
-      if (overX && pc.d1 > 640) out.push([clear < 80 ? 'warn' : 'ok', `手前に移した PC が、スタッフの太ももの外側寄りの真上にかかります。PC下端は床から ${r(pc.y0)}mm、太もも上端とのすき間 約${clear}mm。椅子を高くすると当たります`]);
-      else out.push(['ok', 'PC は膝・太ももの上にかかりません']);
-      break;
-    }
+    const pcs = items.filter((i) => i.name.startsWith('PC '));
+    const overPcs = pcs.filter((pc) => pc.d1 > 640 && staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155));
+    if (overPcs.length) {
+      const low = Math.min(...overPcs.map((p) => p.y0));
+      out.push([low - 545 < 80 ? 'warn' : 'ok', `机下手前の PC ${overPcs.length}台（${[...new Set(overPcs.map((p) => p.name.slice(3)))].join('・')}）がスタッフの太ももの上にかかります。PC下端は床から約 ${r(low)}mm、太もも上端とのすき間 約${r(low - 545)}mm。椅子を高くすると当たります`]);
+    } else out.push(['ok', 'PC は膝・太ももの上にかかりません']);
     out.push(['ok', `マイナ受付の画面中心は床から約 ${CT0 + 162}mm。立った患者（目の高さ 約1530mm）から見下ろす角度です`]);
 
     const ul = document.getElementById('checks');
