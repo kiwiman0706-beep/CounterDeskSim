@@ -185,6 +185,12 @@ tr:last-child td { border-bottom: 0; }
 tr.ref td { background: var(--warn-bg); background: color-mix(in srgb, var(--warn-bg) 45%, transparent); }
 .no { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--fg); color: var(--panel); font-family: var(--f-num); font-size: 11.5px; font-weight: 700; }
 td .chip { display: inline-block; padding: 1px 6px; }
+table.cmp { min-width: 560px; }
+table.cmp td.cur { font-weight: 700; color: var(--accent); }
+table.cmp tr.chg td:first-child { font-weight: 500; }
+.views.two { grid-template-columns: repeat(2, 1fr); }
+.views button small { display: block; font-size: 10.5px; font-weight: 400; color: var(--muted); font-family: var(--f-num); }
+.ghost-tag { color: #b5641c; border-color: #d9822b; }
 
 @media (max-width: 760px) {
   .app { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; }
@@ -206,6 +212,15 @@ td .chip { display: inline-block; padding: 1px 6px; }
       <h1>受付カウンター 3Dシミュレーション</h1>
       <p class="size" id="sizeLine">W 1415 × D 710 × H 1100 mm</p>
     </header>
+
+    <section>
+      <h2>カウンター設計</h2>
+      <div class="views two" id="designSel">
+        <button type="button" data-design="B" aria-pressed="true">変更案<small>H1200 ・ D910</small></button>
+        <button type="button" data-design="A">当初案<small>H1100 ・ D710</small></button>
+      </div>
+      <label class="tg" for="t-ghost" style="margin-top:6px"><span>もう一方の案を重ねる<small>オレンジの輪郭線で比較</small></span><input type="checkbox" id="t-ghost"></label>
+    </section>
 
     <section>
       <h2>配置チェック <span class="sum" id="checkSum"></span></h2>
@@ -248,6 +263,10 @@ td .chip { display: inline-block; padding: 1px 6px; }
         <button type="button" data-mon="14">14型</button>
         <button type="button" data-mon="13.3">13.3型</button>
       </div>
+      <div class="views two" id="monLayout" style="margin-top:6px">
+        <button type="button" data-layout="row" aria-pressed="true">横1列 ×4</button>
+        <button type="button" data-layout="stack">2段 × 2列</button>
+      </div>
     </section>
 
     <section>
@@ -278,25 +297,26 @@ td .chip { display: inline-block; padding: 1px 6px; }
 
     <section>
       <h2>仕様</h2>
-      <dl>
-        <dt>横幅</dt><dd><span class="n" id="specW">1415</span> mm</dd>
-        <dt>奥行</dt><dd><span class="n">710</span> mm（カウンター <span class="n">220</span> ＋ 机 <span class="n">490</span>）</dd>
-        <dt>カウンター高</dt><dd><span class="n">1100</span> mm（天板厚 <span class="n">30</span>）</dd>
-        <dt>机高</dt><dd><span class="n">680</span> mm（天板〜カウンター上端 <span class="n">420</span>）</dd>
-        <dt>台輪</dt><dd>高 <span class="n">200</span> ・ 前板から <span class="n">90</span> 下げ</dd>
-        <dt>照明</dt><dd>前板下端に間接照明（幕板 <span class="n">60</span>）</dd>
-        <dt>配線孔</dt><dd>キャップ付 3ヶ所</dd>
-        <dt>脚</dt><dd>パイプ脚 既製品</dd>
-        <dt>底・裏面</dt><dd>白ポリ</dd>
-      </dl>
+      <dl id="specList"></dl>
     </section>
 
-    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは Pisichen 16型の販売ページ記載の外形、レジ本体の高さとドロアの寸法は XE-A20 全体寸法からの推定）。</p>
+    <p class="note">図面（2F受付カウンター詳細図 1/20 の当初案・変更案）の断面寸法から起こした確認用モデルです。上部壁面とパイプ脚の位置は図からの読み取りです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは Pisichen 16型の販売ページ記載の外形、レジ本体の高さとドロアの寸法は XE-A20 全体寸法からの推定）。</p>
   </aside>
 </div>
 
-<section class="sheet" aria-label="平面図と設置機器の寸法表">
+<section class="sheet" aria-label="設計案の比較・平面図・設置機器の寸法表">
   <div class="sheet-head">
+    <h2 class="sh">設計案の比較</h2>
+    <p class="note">右上の「カウンター設計」で切り替え。太字が表示中の案</p>
+  </div>
+  <div class="table-wrap">
+    <table id="cmpTable" class="cmp">
+      <thead><tr><th>項目</th><th>当初案</th><th>変更案</th><th>差（変更案−当初案）</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="sheet-head" style="margin-top:10px">
     <h2 class="sh">平面図</h2>
     <p class="note">単位 mm ・ スタッフ側から見た向き（上が患者側）・ 横幅とモニターサイズの変更に連動</p>
   </div>
@@ -363,7 +383,7 @@ function start() {
   };
   const DESKS = { white: { name: 'ホワイト', c: '#eceae4' }, grey: { name: 'ライトグレー', c: '#c4c6c6' }, wood: { name: '木目', c: null } };
   const CLOTHS = { ivory: { name: 'アイボリー', c: '#ebe6db' }, grey: { name: 'グレー', c: '#cfcfcb' }, mint: { name: 'ミント', c: '#cfdcd6' } };
-  const S = { W: 1415, wood: 'walnut', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '16', light: true, night: false, section: false, cut: 0 };
+  const S = { W: 1415, wood: 'walnut', desk: 'white', cloth: 'ivory', dims: false, people: true, equip: true, tags: true, mon: '16', monLayout: 'row', design: 'B', ghost: false, light: true, night: false, section: false, cut: 0 };
 
   // ---- renderer / scene ----
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -526,17 +546,19 @@ function start() {
     disposeGroup(desk);
     desk = new THREE.Group();
     const W = S.W, hw = W / 2, inW = W - 40;
+    const { H, tt, T, dt, depth, ctr, uf, lf, leg } = D;
+    const TB = H - tt, DB = T - dt;               // カウンター天板の下端・机の下端
 
-    box(W, 0, 220, 1070, 1100, M.wood);           // カウンター天板 t30
-    box(W, 0, 20, 200, 1070, M.wood);             // 患者側 前板（下端 60 は照明の幕板）
+    box(W, 0, ctr, TB, H, M.wood);                // カウンター天板 t30
+    box(W, 0, 20, 200, TB, M.wood);               // 患者側 前板（下端 60 は照明の幕板）
     box(inW, 90, 110, 0, 260, M.wood);            // 台輪（前板から 90 下げ）
     box(inW, 20, 90, 260, 278, M.poly);           // 照明ボックス 底板 白ポリ
-    box(inW, 200, 220, 0, 655, M.cloth);          // スタッフ側 下部 壁クロス
-    box(inW, 130, 150, 680, 1070, M.cloth);       // スタッフ側 上部 壁クロス
-    box(W, 20, 710, 655, 680, M.desk);            // 机天板
+    box(inW, lf - 20, lf, 0, DB, M.cloth);        // スタッフ側 下部 壁クロス
+    box(inW, uf - 20, uf, T, TB, M.cloth);        // スタッフ側 上部 壁クロス
+    box(W, 20, depth, DB, T, M.desk);             // 机天板
     // 側板（木目）
-    const lower = [[90, 0], [220, 0], [220, 655], [20, 655], [20, 200], [90, 200]];
-    const upper = [[20, 680], [150, 680], [150, 1070], [20, 1070]];
+    const lower = [[90, 0], [lf, 0], [lf, DB], [20, DB], [20, 200], [90, 200]];
+    const upper = [[20, T], [uf, T], [uf, TB], [20, TB]];
     for (const x of [-hw, hw - 20]) { endPanel(lower, x); endPanel(upper, x); }
 
     // 間接照明 LED
@@ -557,23 +579,47 @@ function start() {
     for (const f of [1 / 6, 1 / 2, 5 / 6]) {
       const x = -hw + W * f;
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 3, 40), M.cap);
-      cap.position.set(x, 681.5, Z(280));
+      cap.position.set(x, T + 1.5, Z(uf + 130));
       cap.receiveShadow = true;
       desk.add(cap);
       const slot = new THREE.Mesh(new THREE.BoxGeometry(34, 1, 6), M.poly);
-      slot.position.set(x, 683.2, Z(268));
+      slot.position.set(x, T + 3.2, Z(uf + 118));
       desk.add(slot);
     }
 
     // パイプ脚（既製品・参考形状）
     for (const x of [-hw + 70, hw - 70]) {
-      const p = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 640, 28), M.metal);
-      p.position.set(x, 335, Z(600)); p.castShadow = true; desk.add(p);
-      box(50, 400, 690, 0, 22, M.metal, x);        // 床ベース
-      box(60, 420, 690, 640, 655, M.metal, x);     // 天板受け
+      const p = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, DB - 15, 28), M.metal);
+      p.position.set(x, 15 + (DB - 15) / 2, Z(leg)); p.castShadow = true; desk.add(p);
+      box(50, leg - 200, depth - 20, 0, 22, M.metal, x);        // 床ベース
+      box(60, leg - 180, depth - 20, DB - 15, DB, M.metal, x);  // 天板受け
     }
 
     scene.add(desk);
+  }
+
+  // もう一方の設計案を輪郭線で重ねる（比較用）
+  function buildGhost() {
+    disposeGroup(ghost);
+    ghost = new THREE.Group();
+    const G = DESIGNS[S.design === 'A' ? 'B' : 'A'];
+    const W = S.W, inW = W - 40, TB = G.H - G.tt, DB = G.T - G.dt;
+    const edge = (w, d0, d1, y0, y1) => {
+      const g = new THREE.EdgesGeometry(new THREE.BoxGeometry(w, y1 - y0, d1 - d0));
+      const l = new THREE.LineSegments(g, ghostMat);
+      l.position.set(0, (y0 + y1) / 2, Z((d0 + d1) / 2));
+      l.renderOrder = 9;
+      ghost.add(l);
+    };
+    edge(W, 0, G.ctr, TB, G.H);
+    edge(W, 0, 20, 200, TB);
+    edge(inW, G.lf - 20, G.lf, 0, DB);
+    edge(inW, G.uf - 20, G.uf, G.T, TB);
+    edge(W, 20, G.depth, DB, G.T);
+    ghost.visible = S.ghost;
+    scene.add(ghost);
+    clearLabels('ghost');
+    addLabel(`${G.name}（輪郭線）`, [W / 2 + 40, G.H + 60, Z(G.ctr / 2)], 'tag ghost-tag', 'ghost', () => S.ghost);
   }
 
   function limb(r1, r2, len, a, b, mat, parent) {
@@ -591,13 +637,13 @@ function start() {
   function seatedStaff(x) {
     // 座位のスタッフ（座面高 430）机に向く
     const sit = new THREE.Group();
-    const hipD = 1060, kneeD = 640;
+    const hipD = D.depth + 350, kneeD = D.depth - 70;
     for (const s of [-1, 1]) {
       limb(64, 58, hipD - kneeD, [s * 95, 470, Z(hipD)], [s * 95, 480, Z(kneeD)], personMat, sit);
       limb(52, 44, 440, [s * 95, 470, Z(kneeD)], [s * 95, 40, Z(kneeD - 20)], personMat, sit);
       ball(52, [s * 95, 30, Z(kneeD - 60)], personMat, sit, 1.8);
-      limb(40, 34, 300, [s * 210, 1010, Z(hipD - 30)], [s * 200, 780, Z(hipD - 170)], personMat, sit);
-      limb(34, 30, 300, [s * 200, 780, Z(hipD - 170)], [s * 150, 712, Z(hipD - 430)], personMat, sit);
+      limb(40, 34, 300, [s * 210, 1010, Z(hipD - 30)], [s * 200, D.T + 100, Z(hipD - 170)], personMat, sit);
+      limb(34, 30, 300, [s * 200, D.T + 100, Z(hipD - 170)], [s * 150, D.T + 32, Z(hipD - 430)], personMat, sit);
     }
     limb(150, 165, 520, [0, 480, Z(hipD + 10)], [0, 1000, Z(hipD - 20)], personMat, sit).scale.z = 0.62;
     limb(46, 46, 80, [0, 990, Z(hipD - 20)], [0, 1070, Z(hipD - 30)], personMat, sit);
@@ -624,8 +670,8 @@ function start() {
       ball(55, [s * 90, 30, 30], personMat, st, 1.8);
     }
     limb(42, 34, 560, [-215, 1360, 0], [-240, 820, -40], personMat, st);
-    limb(42, 34, 330, [215, 1360, 0], [235, 1080, -60], personMat, st);
-    limb(34, 30, 300, [235, 1080, -60], [200, 1150, -330], personMat, st);
+    limb(42, 34, 330, [215, 1360, 0], [235, D.H - 20, -60], personMat, st);
+    limb(34, 30, 300, [235, D.H - 20, -60], [200, D.H + 50, -330], personMat, st);
     limb(160, 170, 560, [0, 830, 0], [0, 1390, 0], personMat, st).scale.z = 0.62;
     limb(48, 48, 90, [0, 1380, 0], [0, 1460, 0], personMat, st);
     ball(105, [0, 1545, 0], personMat, st, 1.05);
@@ -640,6 +686,12 @@ function start() {
   const staffX = () => [-S.W / 4, S.W / 4];
 
   // ---- equipment（寸法はメーカー公表値。モバイルモニターは一般的な外形） ----
+  // 設計案（寸法は詳細図 1/20 より。uf=上部壁面・lf=下部壁面・leg=パイプ脚の位置は図からの読み取り）
+  const DESIGNS = {
+    B: { name: '変更案', H: 1200, tt: 30, T: 700, dt: 30, depth: 910, ctr: 550, uf: 360, lf: 220, leg: 790 },
+    A: { name: '当初案', H: 1100, tt: 30, T: 680, dt: 25, depth: 710, ctr: 220, uf: 150, lf: 220, leg: 600 },
+  };
+  let D = DESIGNS.B;
   const MONITORS = {
     '16':   { label: '16型', w: 356, h: 234, t: 10 },   // Pisichen 16インチ タッチ 1920×1200（約 356×234×10）
     '14':   { label: '14型',   w: 318, h: 200, t: 9 },
@@ -697,7 +749,8 @@ function start() {
     scr.pin = m(uiCanvas('pin'));
     scr.phone = m(uiCanvas('phone'));
   }
-  let equip = null, items = [];
+  let equip = null, items = [], ghost = null;
+  const ghostMat = new THREE.LineBasicMaterial({ color: 0xd9822b, transparent: true, opacity: 0.95, depthTest: false });
   function eqBox(w, d0, d1, y0, y1, mat, x) { return box(w, d0, d1, y0, y1, mat, x, equip); }
   function screen(w, h, mat, x, y, d, face) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
@@ -714,97 +767,105 @@ function start() {
     clearLabels('tags');
     equip = new THREE.Group();
     items = [];
-    const W = S.W, hw = W / 2, inW = W - 40, T = 680, CT = 1100;
+    const W = S.W, hw = W / 2, inW = W - 40, T = D.T, CT = D.H, TB = D.H - D.tt;
+    // 当初案（壁面 150・机端 710・机下端 655）を基準にしたずれ
+    const o = D.uf - 150, f = D.depth - 710, u = (D.T - D.dt) - 655;
 
     // 壁面: モバイルモニター 4台（スタッフ側 上部壁、カウンター天板の直下）
-    const mon = MONITORS[S.mon];
-    const gap = Math.max(0, Math.min(12, (inW - 4 * mon.w) / 3));
-    const total = 4 * mon.w + 3 * gap, top = 1062, bot = top - mon.h;
-    for (let i = 0; i < 4; i++) {
-      const cx = -total / 2 + mon.w / 2 + i * (mon.w + gap);
-      eqBox(mon.w, 150, 150 + mon.t, bot, top, EQ.black, cx);
-      screen(mon.w - 12, mon.h - 22, scr.monitor[i], cx, (bot + top) / 2 + 4, 150 + mon.t + 0.6, 'staff');
-      reg(`モニター${i + 1}`, cx, mon.w, bot, top, 150, 150 + mon.t, 'monitor');
+    const mon = MONITORS[S.mon], wd = D.uf;
+    const ms = [];
+    if (S.monLayout === 'stack') {
+      for (const sx of staffX()) for (let j = 0; j < 2; j++) ms.push({ cx: sx, top: TB - 2 - j * mon.h });
+    } else {
+      const gap = Math.max(0, Math.min(12, (inW - 4 * mon.w) / 3));
+      const total = 4 * mon.w + 3 * gap;
+      for (let i = 0; i < 4; i++) ms.push({ cx: -total / 2 + mon.w / 2 + i * (mon.w + gap), top: TB - 8 });
     }
-    tag(`${mon.label}モニター ×4`, 0, bot - 14, 170);
+    ms.forEach((m, i) => {
+      const bot = m.top - mon.h;
+      eqBox(mon.w, wd, wd + mon.t, bot, m.top, EQ.black, m.cx);
+      screen(mon.w - 12, mon.h - 22, scr.monitor[i], m.cx, (bot + m.top) / 2 + 4, wd + mon.t + 0.6, 'staff');
+      reg(`モニター${i + 1}`, m.cx, mon.w, bot, m.top, wd, wd + mon.t, 'monitor');
+    });
+    if (S.monLayout === 'stack') for (const sx of staffX()) tag(`${mon.label}モニター ×2段`, sx, TB - 2 * mon.h - 14, wd + 20);
+    else tag(`${mon.label}モニター ×4`, 0, TB - 8 - mon.h - 14, wd + 20);
 
     // キーボード・マウス（各スタッフの正面）
     for (const sx of staffX()) {
-      eqBox(440, 555, 685, T, T + 12, EQ.dark, sx);
-      eqBox(420, 563, 677, T + 12, T + 24, EQ.key, sx);
-      reg('キーボード', sx, 440, T, T + 24, 555, 685, 'desk');
-      const ms = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), EQ.dark);
-      ms.scale.set(31, 36, 56); ms.position.set(sx + 290, T, Z(625)); ms.castShadow = true;
-      equip.add(ms);
-      reg('マウス', sx + 290, 62, T, T + 36, 569, 681, 'desk');
+      eqBox(440, 555 + f, 685 + f, T, T + 12, EQ.dark, sx);
+      eqBox(420, 563 + f, 677 + f, T + 12, T + 24, EQ.key, sx);
+      reg('キーボード', sx, 440, T, T + 24, 555 + f, 685 + f, 'desk');
+      const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), EQ.dark);
+      m.scale.set(31, 36, 56); m.position.set(sx + 290, T, Z(625 + f)); m.castShadow = true;
+      equip.add(m);
+      reg('マウス', sx + 290, 62, T, T + 36, 569 + f, 681 + f, 'desk');
+      tag('キーボード・マウス', sx, T + 60, 620 + f);
     }
-    tag('キーボード・マウス', -W / 4, T + 60, 620);
-    tag('キーボード・マウス', W / 4, T + 60, 620);
 
     // レジ本体 SHARP XE-A20（ドロア分離時 W220×D295、高さは推定 約100）中央
     // 操作者から見て左にプリンター、右奥に表示部、右手前にキー
-    eqBox(220, 165, 460, T, T + 70, EQ.white, 0);
-    eqBox(92, 165, 440, T + 70, T + 100, EQ.white, 60);
-    eqBox(60, 300, 306, T + 100, T + 101, EQ.dark, 60);
-    eqBox(118, 175, 268, T + 70, T + 100, EQ.black, -46);
-    screen(100, 22, scr.lcd, -46, T + 86, 268.6, 'staff');
-    eqBox(112, 278, 452, T + 70, T + 76, EQ.grey, -46);
-    reg('レジ本体 XE-A20', 0, 220, T, T + 100, 165, 460, 'desk');
-    tag('レジ XE-A20', 0, T + 150, 300);
+    eqBox(220, 165 + o, 460 + o, T, T + 70, EQ.white, 0);
+    eqBox(92, 165 + o, 440 + o, T + 70, T + 100, EQ.white, 60);
+    eqBox(60, 300 + o, 306 + o, T + 100, T + 101, EQ.dark, 60);
+    eqBox(118, 175 + o, 268 + o, T + 70, T + 100, EQ.black, -46);
+    screen(100, 22, scr.lcd, -46, T + 86, 268.6 + o, 'staff');
+    eqBox(112, 278 + o, 452 + o, T + 70, T + 76, EQ.grey, -46);
+    reg('レジ本体 XE-A20', 0, 220, T, T + 100, 165 + o, 460 + o, 'desk');
+    tag('レジ XE-A20', 0, T + 150, 300 + o);
 
     // キャッシュレス決済端末 UA-P10NA 店舗側（W94×D161×H87）レジの右
     const tx = 110 + 25 + 47;
-    eqBox(94, 170, 331, T, T + 87, EQ.white, tx);
-    screen(78, 135, scr.term, tx, T + 87.6, 250, 'up');
-    reg('決済端末(店舗側)', tx, 94, T, T + 87, 170, 331, 'desk');
-    tag('UA-P10NA 店舗側', tx, T + 130, 250);
+    eqBox(94, 170 + o, 331 + o, T, T + 87, EQ.white, tx);
+    screen(78, 135, scr.term, tx, T + 87.6, 250 + o, 'up');
+    reg('決済端末(店舗側)', tx, 94, T, T + 87, 170 + o, 331 + o, 'desk');
+    tag('UA-P10NA 店舗側', tx, T + 130, 250 + o);
 
     // サーマルプリンター PRP-250（W140×D183.5×H126）レジの左
     const px = -(110 + 25 + 70);
-    eqBox(140, 170, 353.5, T, T + 126, EQ.black, px);
-    eqBox(96, 300, 306, T + 126, T + 127, EQ.grey, px);
-    reg('プリンター PRP-250', px, 140, T, T + 126, 170, 353.5, 'desk');
-    tag('PRP-250', px, T + 170, 260);
+    eqBox(140, 170 + o, 353.5 + o, T, T + 126, EQ.black, px);
+    eqBox(96, 300 + o, 306 + o, T + 126, T + 127, EQ.grey, px);
+    reg('プリンター PRP-250', px, 140, T, T + 126, 170 + o, 353.5 + o, 'desk');
+    tag('PRP-250', px, T + 170, 260 + o);
 
     // コードレス子機 JD-SF3CL（充電台 80×86×39、子機 48×24×167）机の両端
     for (const s of [-1, 1]) {
       const cx = s * (hw - 60);
-      eqBox(80, 170, 256, T, T + 39, EQ.white, cx);
-      eqBox(48, 201, 225, T + 14, T + 181, EQ.white, cx);
-      screen(36, 30, scr.phone, cx, T + 150, 225.6, 'staff');
-      reg('子機 JD-SF3CL', cx, 80, T, T + 181, 170, 256, 'desk');
-      tag('子機', cx, T + 230, 213);
+      eqBox(80, 170 + o, 256 + o, T, T + 39, EQ.white, cx);
+      eqBox(48, 201 + o, 225 + o, T + 14, T + 181, EQ.white, cx);
+      screen(36, 30, scr.phone, cx, T + 150, 225.6 + o, 'staff');
+      reg('子機 JD-SF3CL', cx, 80, T, T + 181, 170 + o, 256 + o, 'desk');
+      tag('子機', cx, T + 230, 213 + o);
     }
 
     // キャッシュドロア（XE-A20 から分離 約 W300×D360×H96：全体 196 から本体高さを引いた推定）机下中央に吊り下げ
-    eqBox(310, 345, 685, 645, 655, EQ.bracket, 0);
-    eqBox(300, 335, 695, 549, 645, EQ.dark, 0);
-    eqBox(270, 693, 696, 570, 625, EQ.black, 0);
-    reg('キャッシュドロア', 0, 300, 549, 655, 335, 695, 'under');
-    tag('ドロア', 0, 520, 690);
+    eqBox(310, 345 + f, 685 + f, 645 + u, 655 + u, EQ.bracket, 0);
+    eqBox(300, 335 + f, 695 + f, 549 + u, 645 + u, EQ.dark, 0);
+    eqBox(270, 693 + f, 696 + f, 570 + u, 625 + u, EQ.black, 0);
+    reg('キャッシュドロア', 0, 300, 549 + u, 655 + u, 335 + f, 695 + f, 'under');
+    tag('ドロア', 0, 520 + u, 690 + f);
 
     // ThinkCentre M75q Tiny Gen 5（179×182.9×36.5）机下両端の手前にアンダーマウント
     // 前面（電源・USB）をスタッフ側へ。パイプ脚の天板受けを避けて内側へ寄せる
     for (const s of [-1, 1]) {
       const cx = s * (hw - 207.5);
-      eqBox(195, 490, 677, 640, 655, EQ.bracket, cx);
-      eqBox(179, 492, 675, 603.5, 640, EQ.black, cx);
-      eqBox(150, 675, 676, 612, 632, EQ.dark, cx);
-      reg('PC M75q Tiny', cx, 195, 603.5, 655, 490, 677, 'under');
-      tag('M75q Tiny', cx, 575, 690);
+      eqBox(195, 490 + f, 677 + f, 640 + u, 655 + u, EQ.bracket, cx);
+      eqBox(179, 492 + f, 675 + f, 603.5 + u, 640 + u, EQ.black, cx);
+      eqBox(150, 675 + f, 676 + f, 612 + u, 632 + u, EQ.dark, cx);
+      reg('PC M75q Tiny', cx, 195, 603.5 + u, 655 + u, 490 + f, 677 + f, 'under');
+      tag('M75q Tiny', cx, 575 + u, 690 + f);
     }
     // HP Elite Mini 805 G8（177×175×34）マイナ受付の制御用。スタッフから見て左の M75q の右隣（中央寄り）
     {
       const m75x0 = hw - 207.5 - 97.5;            // 左の M75q マウントの内側端
       const cx = m75x0 - 12 - 96.5;
-      eqBox(193, 490, 669, 640, 655, EQ.bracket, cx);
-      eqBox(177, 492, 667, 606, 640, EQ.black, cx);
-      eqBox(140, 667, 668, 614, 632, EQ.dark, cx);
-      reg('PC Elite Mini 805 G8', cx, 193, 606, 655, 490, 669, 'under');
-      tag('Elite Mini 805 G8', cx, 545, 690);
+      eqBox(193, 490 + f, 669 + f, 640 + u, 655 + u, EQ.bracket, cx);
+      eqBox(177, 492 + f, 667 + f, 606 + u, 640 + u, EQ.black, cx);
+      eqBox(140, 667 + f, 668 + f, 614 + u, 632 + u, EQ.dark, cx);
+      reg('PC Elite Mini 805 G8', cx, 193, 606 + u, 655 + u, 490 + f, 669 + f, 'under');
+      tag('Elite Mini 805 G8', cx, 545 + u, 690 + f);
     }
-    // パイプ脚（干渉チェック用）
-    for (const s of [-1, 1]) reg('パイプ脚', s * (hw - 70), 60, 0, 655, 420, 690, 'leg');
+    // パイプ脚（干渉チェック用：天板受けの範囲）
+    for (const s of [-1, 1]) reg('パイプ脚', s * (hw - 70), 60, 0, D.T - D.dt, D.leg - 180, D.depth - 20, 'leg');
 
     // カウンター上: マイナンバーカードリーダー（160×150×280）患者から見て右端
     const rx = hw - 100;
@@ -832,12 +893,23 @@ function start() {
   function runChecks() {
     const out = [];
     const W = S.W, hw = W / 2, inW = W - 40, r = Math.round;
-    const mons = items.filter((i) => i.kind === 'monitor');
-    const total = r(mons[3].x1 - mons[0].x0), mon = MONITORS[S.mon];
-    if (total > W) out.push(['ng', `${mon.label}モニター4台を横に並べると ${total}mm。カウンター幅 ${W}mm から左右に約 ${r((total - W) / 2)}mm ずつはみ出します`]);
-    else if (total > inW) out.push(['warn', `モニター4台 ${total}mm はすき間なしで、両端が側板の前まで掛かります（内寸 ${inW}mm）`]);
-    else out.push(['ok', `モニター4台 ${total}mm（すき間 ${r((total - 4 * mon.w) / 3)}mm）が内寸 ${inW}mm に収まります`]);
-    out.push(['ok', `モニターの高さ ${mon.h}mm は机上〜天板下の壁 390mm に1段で収まります（2段は ${mon.h * 2}mm で入りません）`]);
+    const mons = items.filter((i) => i.kind === 'monitor'), mon = MONITORS[S.mon];
+    const wallH = D.H - D.tt - D.T;
+    if (S.monLayout === 'stack') {
+      const need = mon.h * 2;
+      if (need > wallH) out.push(['ng', `${mon.label}モニターを2段に重ねると ${need}mm。机上〜天板下の壁 ${wallH}mm に入らず、下の段が机に約 ${need - wallH}mm 食い込みます`]);
+      else out.push([wallH - need < 10 ? 'warn' : 'ok', `${mon.label}モニター2段 ${need}mm が壁の高さ ${wallH}mm に収まります（余り ${wallH - need}mm${wallH - need < 10 ? '。上下をすき間なく取り付ける必要があります' : ''}）`]);
+      const outer = r(W / 4 + mon.w / 2), inner = r(W / 4 - mon.w / 2);
+      if (inner < 0) out.push(['ng', `左右の2段モニターが中央で約 ${-2 * inner}mm 重なります`]);
+      else if (outer > hw) out.push(['ng', `2段モニターの外側がカウンター端から約 ${outer - hw}mm はみ出します`]);
+      else out.push(['ok', `2段×2列（各スタッフの正面）。左右の列の間は ${2 * inner}mm 空きます`]);
+    } else {
+      const total = r(mons[3].x1 - mons[0].x0);
+      if (total > W) out.push(['ng', `${mon.label}モニター4台を横に並べると ${total}mm。カウンター幅 ${W}mm から左右に約 ${r((total - W) / 2)}mm ずつはみ出します`]);
+      else if (total > inW) out.push(['warn', `モニター4台 ${total}mm はすき間なしで、両端が側板の前まで掛かります（内寸 ${inW}mm）`]);
+      else out.push(['ok', `モニター4台 ${total}mm（すき間 ${r((total - 4 * mon.w) / 3)}mm）が内寸 ${inW}mm に収まります`]);
+      out.push([mon.h <= wallH ? 'ok' : 'ng', `モニターの高さ ${mon.h}mm は机上〜天板下の壁 ${wallH}mm に1段で${mon.h <= wallH ? '収まります' : '入りません'}。2段（${mon.h * 2}mm）は${mon.h * 2 <= wallH ? 'この設計なら入ります（「2段×2列」で確認できます）' : '入りません'}`]);
+    }
 
     const ov = (a, b) => a.x0 < b.x1 - 0.5 && b.x0 < a.x1 - 0.5 && a.y0 < b.y1 - 0.5 && b.y0 < a.y1 - 0.5 && a.d0 < b.d1 - 0.5 && b.d0 < a.d1 - 0.5;
     const solid = items.filter((i) => i.kind !== 'monitor');
@@ -848,13 +920,13 @@ function start() {
       if (ov(a, b)) { hits++; out.push(['ng', `${a.name} と ${b.name} がぶつかります`]); }
     }
     for (const it of items) {
-      if (it.kind === 'desk' && (it.x0 < -hw || it.x1 > hw || it.d1 > 710)) out.push(['ng', `${it.name} が机からはみ出します`]);
-      if (it.kind === 'counter' && (it.x0 < -hw || it.x1 > hw || it.d1 > 220)) out.push(['ng', `${it.name} がカウンター天板（奥行220）からはみ出します`]);
+      if (it.kind === 'desk' && (it.x0 < -hw || it.x1 > hw || it.d1 > D.depth)) out.push(['ng', `${it.name} が机からはみ出します`]);
+      if (it.kind === 'counter' && (it.x0 < -hw || it.x1 > hw || it.d1 > D.ctr)) out.push(['ng', `${it.name} がカウンター天板（奥行${D.ctr}）からはみ出します`]);
     }
     if (!hits) out.push(['ok', '机上・机下・カウンター上の機器どうし、パイプ脚との干渉はありません']);
 
-    // 座った目線（目の高さ 1140、壁から 830mm）からモニター下端が隠れるか
-    const E = { y: 1140, d: 980 };
+    // 座った目線（目の高さ 1140、机の端から 270mm）からモニター下端が隠れるか
+    const E = { y: 1140, d: D.depth + 270 };
     for (const it of items.filter((i) => i.kind === 'desk')) {
       let worst = 0, who = [];
       for (const m of mons) {
@@ -869,15 +941,16 @@ function start() {
     // 膝まわり
     const knee = W / 4 - 155;
     const drawerGap = r(knee - 150);
-    out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 約549mm（座った太もも上端 約545mm）`]);
-    // PC と太もも（座位: 太もも上端 約545mm、各スタッフ中心 ±155mm、奥行 640〜1060）
+    const drawer = items.find((i) => i.name === 'キャッシュドロア');
+    out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から約 ${r(drawer.y0)}mm（座った太もも上端 約545mm）`]);
+    // PC と太もも（座位: 太もも上端 約545mm、各スタッフ中心 ±155mm、膝は机の端から 70mm 内側）
     const pcs = items.filter((i) => i.name.startsWith('PC '));
-    const overPcs = pcs.filter((pc) => pc.d1 > 640 && staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155));
+    const overPcs = pcs.filter((pc) => pc.d1 > D.depth - 70 && staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155));
     if (overPcs.length) {
       const low = Math.min(...overPcs.map((p) => p.y0));
-      out.push([low - 545 < 80 ? 'warn' : 'ok', `机下手前の PC ${overPcs.length}台（${[...new Set(overPcs.map((p) => p.name.slice(3)))].join('・')}）がスタッフの太ももの上にかかります。PC下端は床から約 ${r(low)}mm、太もも上端とのすき間 約${r(low - 545)}mm。椅子を高くすると当たります`]);
+      out.push([low - 545 < 80 ? 'warn' : 'ok', `机下手前の PC ${overPcs.length}台（${[...new Set(overPcs.map((p) => p.name.slice(3)))].join('・')}）がスタッフの太ももの上にかかります。PC下端は床から約 ${r(low)}mm、太もも上端とのすき間 約${r(low - 545)}mm${low - 545 < 80 ? '。椅子を高くすると当たります' : ''}`]);
     } else out.push(['ok', 'PC は膝・太ももの上にかかりません']);
-    out.push(['ok', `マイナ受付の画面中心は床から約 ${CT0 + 162}mm。立った患者（目の高さ 約1530mm）から見下ろす角度です`]);
+    out.push(['ok', `マイナ受付の画面中心は床から約 ${D.H + 162}mm。立った患者（目の高さ 約1530mm）から見下ろす角度です`]);
 
     const ul = document.getElementById('checks');
     ul.replaceChildren(...out.map(([lv, t]) => {
@@ -890,7 +963,6 @@ function start() {
     document.getElementById('checkSum').textContent = n.ng || n.warn ? `NG ${n.ng} ・ 注意 ${n.warn}` : 'すべて OK';
     renderPlan(); renderTable();
   }
-  const CT0 = 1100;
 
   // ---- 平面図・寸法表 ----
   const SPEC = [
@@ -925,7 +997,7 @@ function start() {
     const W = S.W, hw = W / 2;
     // スタッフ側から見た向き: 上が患者側、スタッフから見て左（+x）が図の左
     const PX = (x) => -x;
-    const pad = 300, top = -540, bottom = 1320;
+    const pad = 300, top = -540, bottom = D.depth + 610;
     svg.setAttribute('viewBox', `${-hw - pad} ${top} ${W + pad * 2} ${bottom - top}`);
     const rect = (x0, x1, d0, d1, cls) => sv('rect', { x: PX(x1), y: d0, width: x1 - x0, height: d1 - d0, class: cls }, svg);
 
@@ -933,16 +1005,16 @@ function start() {
     sv('circle', { cx: PX(hw - 330), cy: -330, r: 170, class: 'pl-person' }, svg);
     sv('text', { x: PX(hw - 330), y: -320, class: 'pl-faint' }, svg, '患者');
     for (const sx of staffX()) {
-      sv('circle', { cx: PX(sx), cy: 1000, r: 240, class: 'pl-person' }, svg);
-      sv('text', { x: PX(sx), y: 1010, class: 'pl-faint' }, svg, 'スタッフ席');
+      sv('circle', { cx: PX(sx), cy: D.depth + 290, r: 240, class: 'pl-person' }, svg);
+      sv('text', { x: PX(sx), y: D.depth + 300, class: 'pl-faint' }, svg, 'スタッフ席');
     }
     sv('text', { x: 0, y: -470, class: 'pl-zone' }, svg, '患者側');
-    sv('text', { x: 0, y: 1300, class: 'pl-zone' }, svg, 'スタッフ側');
+    sv('text', { x: 0, y: D.depth + 590, class: 'pl-zone' }, svg, 'スタッフ側');
 
     // 家具: 机 → カウンター天板
-    rect(-hw, hw, 20, 710, 'pl-desk');
-    rect(-hw, hw, 0, 220, 'pl-counter');
-    sv('line', { x1: -hw + 20, x2: hw - 20, y1: 150, y2: 150, class: 'pl-hidden' }, svg);
+    rect(-hw, hw, 20, D.depth, 'pl-desk');
+    rect(-hw, hw, 0, D.ctr, 'pl-counter');
+    sv('line', { x1: -hw + 20, x2: hw - 20, y1: D.uf, y2: D.uf, class: 'pl-hidden' }, svg);
 
     // 機器
     const order = { leg: 0, under: 1, monitor: 2, desk: 3, counter: 4 };
@@ -951,7 +1023,7 @@ function start() {
       const cls = { leg: 'pl-leg', under: 'pl-under', monitor: 'pl-mon', desk: 'pl-item', counter: 'pl-citem' }[it.kind];
       rect(it.x0, it.x1, it.d0, it.d1, cls);
     }
-    for (const s of [-1, 1]) sv('circle', { cx: PX(s * (hw - 70)), cy: 600, r: 25, class: 'pl-leg' }, svg);
+    for (const s of [-1, 1]) sv('circle', { cx: PX(s * (hw - 70)), cy: D.leg, r: 25, class: 'pl-leg' }, svg);
 
     // 番号
     const mons = items.filter((i) => i.kind === 'monitor');
@@ -959,7 +1031,7 @@ function start() {
       sv('circle', { cx: x, cy: y, r: 24, class: 'pl-badge' }, svg);
       sv('text', { x, y: y + 9, class: 'pl-num' }, svg, String(n));
     };
-    for (const m of mons) badge(1, PX((m.x0 + m.x1) / 2), 120);
+    for (const m of mons) badge(1, PX((m.x0 + m.x1) / 2), D.uf - 30);
     for (const it of items) {
       const n = NO_OF(it.name);
       if (!n || n === 1) continue;
@@ -986,9 +1058,9 @@ function start() {
     dimH(-hw, hw, -150, String(W));
     const mTotal = Math.round(mons[3].x1 - mons[0].x0);
     if (mTotal > W) dimH(mons[0].x0, mons[3].x1, -60, `モニター4台 ${mTotal}`);
-    dimV(0, 220, hw + 110, '220');
-    dimV(220, 710, hw + 110, '490');
-    dimV(0, 710, hw + 220, '710');
+    dimV(0, D.ctr, hw + 110, String(D.ctr));
+    dimV(D.ctr, D.depth, hw + 110, String(D.depth - D.ctr));
+    dimV(0, D.depth, hw + 220, String(D.depth));
   }
   function renderTable() {
     const tb = document.querySelector('#eqTable tbody');
@@ -1006,6 +1078,45 @@ function start() {
       });
       return tr;
     }));
+  }
+
+  function renderSpec() {
+    const n = (v) => `<span class="n">${v}</span>`;
+    document.getElementById('sizeLine').textContent = `${D.name} ・ W ${S.W} × D ${D.depth} × H ${D.H} mm`;
+    document.getElementById('specList').innerHTML = [
+      ['横幅', `${n(S.W)} mm`],
+      ['奥行', `${n(D.depth)} mm（カウンター天板 ${n(D.ctr)} ＋ 机の張り出し ${n(D.depth - D.ctr)}）`],
+      ['カウンター高', `${n(D.H)} mm（天板厚 ${n(D.tt)}）`],
+      ['机高', `${n(D.T)} mm（机上〜天板下 ${n(D.H - D.tt - D.T)}）`],
+      ['机の有効奥行', `${n(D.depth - D.uf)} mm（上部壁面〜机の端）`],
+      ['台輪', `高 ${n(200)} ・ 前板から ${n(90)} 下げ`],
+      ['照明', `前板下端に間接照明（幕板 ${n(60)}）`],
+      ['配線孔', 'キャップ付 3ヶ所'],
+      ['脚', 'パイプ脚 既製品'],
+      ['底・裏面', '白ポリ'],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    renderCompare();
+  }
+  function renderCompare() {
+    const A = DESIGNS.A, B = DESIGNS.B, mon = MONITORS[S.mon];
+    const pcGap = (G) => Math.round(G.T - G.dt - 15 - 36.5 - 545);
+    const rows = [
+      ['カウンター高さ', (G) => G.H, 'mm'],
+      ['奥行（合計）', (G) => G.depth, 'mm'],
+      ['カウンター天板の奥行（患者側の置き場）', (G) => G.ctr, 'mm'],
+      ['机の高さ', (G) => G.T, 'mm'],
+      ['机上〜カウンター天板下（モニターを付ける壁の高さ）', (G) => G.H - G.tt - G.T, 'mm'],
+      ['机の有効奥行（上部壁面〜机の端）', (G) => G.depth - G.uf, 'mm'],
+      ['机下の高さ（床〜机の下端）', (G) => G.T - G.dt, 'mm'],
+      ['机下手前の PC と太ももとのすき間', pcGap, 'mm'],
+      [`${mon.label}モニター 2段（${mon.h * 2}mm）`, (G) => (mon.h * 2 <= G.H - G.tt - G.T ? `入る（余り ${G.H - G.tt - G.T - mon.h * 2}）` : `入らない（${mon.h * 2 - (G.H - G.tt - G.T)} 不足）`), ''],
+    ];
+    const tb = document.querySelector('#cmpTable tbody');
+    tb.innerHTML = rows.map(([label, fn, unit]) => {
+      const a = fn(A), b = fn(B);
+      const diff = typeof a === 'number' ? (b - a === 0 ? '—' : `${b - a > 0 ? '+' : ''}${b - a}`) : '';
+      return `<tr${a !== b ? ' class="chg"' : ''}><td>${label}</td><td class="n${S.design === 'A' ? ' cur' : ''}">${a}${typeof a === 'number' ? ' ' + unit : ''}</td><td class="n${S.design === 'B' ? ' cur' : ''}">${b}${typeof b === 'number' ? ' ' + unit : ''}</td><td class="n">${diff}</td></tr>`;
+    }).join('');
   }
 
   // ---- dimensions ----
@@ -1041,21 +1152,21 @@ function start() {
     disposeGroup(dimGroup);
     clearLabels('dims');
     dimGroup = new THREE.Group();
-    const hw = S.W / 2, F = Z(0), B = Z(710), C = Z(220);
-    dim([-hw, 1100, F], [hw, 1100, F], [0, 140, 0], String(S.W));
-    dim([-hw, 0, F], [-hw, 1100, F], [-260, 0, 0], '1100');
+    const hw = S.W / 2, F = Z(0), B = Z(D.depth), C = Z(D.ctr), H = D.H, T = D.T;
+    dim([-hw, H, F], [hw, H, F], [0, 140, 0], String(S.W));
+    dim([-hw, 0, F], [-hw, H, F], [-260, 0, 0], String(H));
     dim([-hw, 0, F], [-hw, 200, F], [-120, 0, 0], '200');
-    dim([hw, 1100, F], [hw, 1100, C], [220, 0, 0], '220');
-    dim([hw, 1100, C], [hw, 1100, B], [220, 0, 0], '490');
-    dim([hw, 1100, F], [hw, 1100, B], [380, 0, 0], '710');
-    dim([hw, 0, B], [hw, 680, B], [160, 0, 0], '680');
-    dim([hw, 680, B], [hw, 1100, B], [160, 0, 0], '420');
+    dim([hw, H, F], [hw, H, C], [220, 0, 0], String(D.ctr));
+    dim([hw, H, C], [hw, H, B], [220, 0, 0], String(D.depth - D.ctr));
+    dim([hw, H, F], [hw, H, B], [380, 0, 0], String(D.depth));
+    dim([hw, 0, B], [hw, T, B], [160, 0, 0], String(T));
+    dim([hw, T, B], [hw, H, B], [160, 0, 0], String(H - T));
     dimGroup.visible = S.dims;
     scene.add(dimGroup);
   }
 
   function rebuild() {
-    buildDesk(); buildPeople(); buildEquip(); buildDims();
+    buildDesk(); buildGhost(); buildPeople(); buildEquip(); buildDims(); renderSpec();
     updateLight(); updateSection(); runChecks();
   }
 
@@ -1104,7 +1215,7 @@ function start() {
   };
   let tween = null;
   function go(name) {
-    const v = name === 'seat' ? { p: [-S.W / 4, 1140, Z(980)], t: [-S.W / 4 + 120, 900, Z(150)] } : VIEWS[name];
+    const v = name === 'seat' ? { p: [-S.W / 4, 1140, Z(D.depth + 270)], t: [-S.W / 4 + 120, (D.T + D.H) / 2, Z(D.uf)] } : VIEWS[name];
     const scale = name === 'seat' ? 1 : Math.max(1, S.W / 1415) ** 0.8;
     const to = new V3(...v.t), p = new V3(...v.p);
     const toP = to.clone().add(p.sub(to).multiplyScalar(scale));
@@ -1125,6 +1236,19 @@ function start() {
   on('t-people', (v) => { S.people = v; people.visible = v; });
   on('t-equip', (v) => { S.equip = v; equip.visible = v; });
   on('t-tags', (v) => { S.tags = v; });
+  on('t-ghost', (v) => { S.ghost = v; ghost.visible = v; });
+  document.getElementById('designSel').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.design = b.dataset.design; D = DESIGNS[S.design];
+    document.querySelectorAll('#designSel button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    rebuild();
+  });
+  document.getElementById('monLayout').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.monLayout = b.dataset.layout;
+    document.querySelectorAll('#monLayout button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    buildEquip(); updateSection(); runChecks();
+  });
   document.getElementById('monSize').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     S.mon = b.dataset.mon;
@@ -1144,8 +1268,6 @@ function start() {
   function setW(v, now = false) {
     v = Math.round(Math.max(900, Math.min(3000, +v || 1415)) / 5) * 5;
     S.W = v; wNum.value = v; wRange.value = v;
-    document.getElementById('specW').textContent = v;
-    document.getElementById('sizeLine').textContent = `W ${v} × D 710 × H 1100 mm`;
     clearTimeout(wTimer);
     if (now) rebuild(); else wTimer = setTimeout(rebuild, 40);
   }
