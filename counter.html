@@ -283,7 +283,7 @@ td .chip { display: inline-block; padding: 1px 6px; }
       </dl>
     </section>
 
-    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは Pisichen 16型の販売ページ記載の外形、ドロアは TE-400 全体寸法から本体分を引いた推定）。</p>
+    <p class="note">図面の断面寸法から起こした確認用モデルです。内部の下地・棚は省略しています。パイプ脚の位置と形状は参考です。機器はメーカー公表の外形寸法で作っています（モバイルモニターは Pisichen 16型の販売ページ記載の外形、レジ本体の高さとドロアの寸法は XE-A20 全体寸法からの推定）。</p>
   </aside>
 </div>
 
@@ -310,7 +310,7 @@ td .chip { display: inline-block; padding: 1px 6px; }
       <tbody></tbody>
     </table>
   </div>
-  <p class="note">※ レジスター（No.5）とキャッシュドロア（No.6）は、類似機種の CASIO TE-400 の寸法を参考値として載せています。実際に導入する機種の寸法で確認してください。</p>
+  <p class="note">※ レジスター（No.5）は SHARP XE-A20 です。公表値はドロア込みの全体 300×360×196mm と、ドロア分離時の本体 220×295mm（幅×奥行）だけなので、本体の高さ（約100mm）とドロアの寸法は推定値です。</p>
 </section>
 
 <script>
@@ -733,23 +733,26 @@ function start() {
     tag('キーボード・マウス', -W / 4, T + 60, 620);
     tag('キーボード・マウス', W / 4, T + 60, 620);
 
-    // レジ本体 CASIO TE-400（本体のみ W219×D293×H104）中央
-    eqBox(219, 225, 458, T, T + 62, EQ.white, 0);
-    eqBox(195, 245, 445, T + 62, T + 65, EQ.grey, 0);
-    eqBox(219, 165, 235, T, T + 104, EQ.white, 0);
-    screen(160, 30, scr.lcd, 0, T + 82, 235.6, 'staff');
-    reg('レジ本体 TE-400', 0, 219, T, T + 104, 165, 458, 'desk');
-    tag('レジ TE-400', 0, T + 150, 300);
+    // レジ本体 SHARP XE-A20（ドロア分離時 W220×D295、高さは推定 約100）中央
+    // 操作者から見て左にプリンター、右奥に表示部、右手前にキー
+    eqBox(220, 165, 460, T, T + 70, EQ.white, 0);
+    eqBox(92, 165, 440, T + 70, T + 100, EQ.white, 60);
+    eqBox(60, 300, 306, T + 100, T + 101, EQ.dark, 60);
+    eqBox(118, 175, 268, T + 70, T + 100, EQ.black, -46);
+    screen(100, 22, scr.lcd, -46, T + 86, 268.6, 'staff');
+    eqBox(112, 278, 452, T + 70, T + 76, EQ.grey, -46);
+    reg('レジ本体 XE-A20', 0, 220, T, T + 100, 165, 460, 'desk');
+    tag('レジ XE-A20', 0, T + 150, 300);
 
     // キャッシュレス決済端末 UA-P10NA 店舗側（W94×D161×H87）レジの右
-    const tx = 109.5 + 25 + 47;
+    const tx = 110 + 25 + 47;
     eqBox(94, 170, 331, T, T + 87, EQ.white, tx);
     screen(78, 135, scr.term, tx, T + 87.6, 250, 'up');
     reg('決済端末(店舗側)', tx, 94, T, T + 87, 170, 331, 'desk');
     tag('UA-P10NA 店舗側', tx, T + 130, 250);
 
     // サーマルプリンター PRP-250（W140×D183.5×H126）レジの左
-    const px = -(109.5 + 25 + 70);
+    const px = -(110 + 25 + 70);
     eqBox(140, 170, 353.5, T, T + 126, EQ.black, px);
     eqBox(96, 300, 306, T + 126, T + 127, EQ.grey, px);
     reg('プリンター PRP-250', px, 140, T, T + 126, 170, 353.5, 'desk');
@@ -765,11 +768,11 @@ function start() {
       tag('子機', cx, T + 230, 213);
     }
 
-    // キャッシュドロア（TE-400 付属 約 W330×D360×H94）机下中央に吊り下げ
-    eqBox(340, 345, 685, 645, 655, EQ.bracket, 0);
-    eqBox(330, 335, 695, 551, 645, EQ.dark, 0);
-    eqBox(300, 693, 696, 570, 625, EQ.black, 0);
-    reg('キャッシュドロア', 0, 330, 551, 655, 335, 695, 'under');
+    // キャッシュドロア（XE-A20 から分離 約 W300×D360×H96：全体 196 から本体高さを引いた推定）机下中央に吊り下げ
+    eqBox(310, 345, 685, 645, 655, EQ.bracket, 0);
+    eqBox(300, 335, 695, 549, 645, EQ.dark, 0);
+    eqBox(270, 693, 696, 570, 625, EQ.black, 0);
+    reg('キャッシュドロア', 0, 300, 549, 655, 335, 695, 'under');
     tag('ドロア', 0, 520, 690);
 
     // ThinkCentre M75q Tiny Gen 5（179×182.9×36.5）机下両端の手前にアンダーマウント
@@ -857,8 +860,8 @@ function start() {
 
     // 膝まわり
     const knee = W / 4 - 155;
-    const drawerGap = r(knee - 165);
-    out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 551mm（座った太もも上端 約545mm）`]);
+    const drawerGap = r(knee - 150);
+    out.push([drawerGap < 40 ? 'warn' : 'ok', `机下のドロアとスタッフの膝の左右すき間は約 ${drawerGap}mm。ドロア下端は床から 約549mm（座った太もも上端 約545mm）`]);
     // PC と太もも（座位: 太もも上端 約545mm、各スタッフ中心 ±155mm、奥行 640〜1060）
     const pcs = items.filter((i) => i.name.startsWith('PC '));
     const overPcs = pcs.filter((pc) => pc.d1 > 640 && staffX().some((sx) => pc.x0 < sx + 155 && pc.x1 > sx - 155));
@@ -887,8 +890,8 @@ function start() {
     { no: 2, name: 'マイナンバーカードリーダー', model: '顔認証付きカードリーダー', size: '160×150×280', qty: '1', place: 'カウンター上・患者から見て右端', note: '提示画像の約寸' },
     { no: 3, name: 'キャッシュレス決済端末（顧客側）', model: 'SHARP UA-P10NA', size: '117×82×49', qty: '1', place: 'カウンター上', note: 'メーカー公表値（約）' },
     { no: 4, name: 'キャッシュレス決済端末（店舗側）', model: 'SHARP UA-P10NA', size: '94×161×87', qty: '1', place: '机上・レジの横', note: 'メーカー公表値（約）' },
-    { no: 5, name: 'レジスター本体', model: 'CASIO TE-400（類似機種）', size: '219×293×104', qty: '1', place: '机上中央', note: '参考値：類似機種の寸法', ref: true },
-    { no: 6, name: 'キャッシュドロア', model: 'TE-400 付属ドロア（類似機種）', size: '330×360×94', qty: '1', place: '机下中央', note: '参考値：TE-400 全体 330×360×198 から本体分を引いた推定', ref: true },
+    { no: 5, name: 'レジスター本体', model: 'SHARP XE-A20', size: '220×295×約100', qty: '1', place: '机上中央', note: '幅・奥行はメーカー公表値（ドロア分離時）。高さは推定', ref: true },
+    { no: 6, name: 'キャッシュドロア', model: 'SHARP XE-A20 付属ドロア（分離設置）', size: '300×360×約96', qty: '1', place: '机下中央', note: '推定：全体 300×360×196 から本体の高さを引いた値', ref: true },
     { no: 7, name: 'サーマルプリンター', model: 'エフケイシステム PRP-250', size: '140×183.5×126', qty: '1', place: '机上・レジの横', note: '後継の PRP-250II の公表値' },
     { no: 8, name: 'コードレス電話 子機', model: 'SHARP JD-SF3CL-W（子機のみ）', size: '充電台 80×86×39 ／ 子機 48×24×167', qty: '2', place: '机上の両端', note: 'メーカー公表値（約）' },
     { no: 9, name: 'ミニPC', model: 'Lenovo ThinkCentre M75q Tiny Gen 5', size: '179×182.9×36.5', qty: '2', place: '机下の両端・手前（アンダーマウント）', note: 'メーカー公表値（ゴム足込み）' },
@@ -898,7 +901,7 @@ function start() {
   ];
   const NO_OF = (name) => {
     if (name.startsWith('モニター')) return 1;
-    return { 'マイナ受付': 2, '決済端末(顧客側)': 3, '決済端末(店舗側)': 4, 'レジ本体 TE-400': 5, 'キャッシュドロア': 6, 'プリンター PRP-250': 7, '子機 JD-SF3CL': 8, 'PC M75q Tiny': 9, 'PC Elite Mini 805 G8': 10, 'キーボード': 11, 'マウス': 12 }[name];
+    return { 'マイナ受付': 2, '決済端末(顧客側)': 3, '決済端末(店舗側)': 4, 'レジ本体 XE-A20': 5, 'キャッシュドロア': 6, 'プリンター PRP-250': 7, '子機 JD-SF3CL': 8, 'PC M75q Tiny': 9, 'PC Elite Mini 805 G8': 10, 'キーボード': 11, 'マウス': 12 }[name];
   };
   const SVGNS = 'http://www.w3.org/2000/svg';
   function sv(tag, attrs, parent, text) {
@@ -988,7 +991,7 @@ function start() {
       cells.forEach((v, i) => {
         const td = document.createElement('td');
         if (i === 0) { const b = document.createElement('span'); b.className = 'no'; b.textContent = v; td.append(b); }
-        else if (i === 6 && r.ref) { const b = document.createElement('span'); b.className = 'chip warn'; b.textContent = '参考値'; td.append(b, ' ', v.replace('参考値：', '')); }
+        else if (i === 6 && r.ref) { const b = document.createElement('span'); b.className = 'chip warn'; b.textContent = '一部推定'; td.append(b, ' ', v); }
         else td.textContent = v;
         if (i === 3 || i === 4) td.className = 'n';
         tr.append(td);
